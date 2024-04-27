@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Community</title>
+</head>
+<body>
+    <h2>Create a New Community</h2>
+    <form method="post" action="/create_community">
+        {% csrf_token %}
+        {{ form.name.label_tag }}
+        {{ form.name }}
+        <br><br>
+        <label for="description">Description:</label>
+        <br>
+        <textarea id="description" name="description" rows="4" cols="50"></textarea>
+        <br><br>
+        <label for="public">Public</label>
+        <input type="radio" id="public" name="privacy" value="public">
+        <label for="private">Private</label>
+        <input type="radio" id="private" name="privacy" value="private">
+        <br><br>
+        <button type="submit">Create Community</button>
+    </form>
+</body>
+</html>
