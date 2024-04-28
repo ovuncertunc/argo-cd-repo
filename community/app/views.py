@@ -53,6 +53,12 @@ def home(request=None):
     all_communities = Community.objects.exclude(name__in=joined_communities)
     return render(request, 'home.html',  {'communities': all_communities, "posts": posts})
 
+def my_communities(request):
+    username = request.user.username
+    joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
+    communities=Community.objects.filter(name__in=joined_communities)
+    return render(request, 'my_communities.html', {'communities': communities})
+
 def create_community(request):
     if request.method == 'POST':
         form = CommunityCreationForm(request.POST)
@@ -67,38 +73,51 @@ def create_community(request):
             new_community = Community(name=community_name, privacy=community_privacy, owner=owner, description=description)
             new_community.save()
 
-            return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
+            # Community creator is automatically joined to the community
+            new_community_membership = UserCommunityMembership(username=request.user.username, community=community_name)
+            new_community_membership.save()
+
+            return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True, "is_joined": True})
     else:
         form = CommunityCreationForm()
 
     return render(request, 'create_community.html', {'form': form})
 
 def community_home(request):
+
+    username = request.user.username
     community_name = request.GET["community_name"]
-    posts = DefaultTemplate.objects.filter(community_name=community_name)
+    community_membership = UserCommunityMembership.objects.filter(username=username, community=community_name)
+
+    is_joined = len(community_membership) == 1
+
+    if is_joined:
+        posts = DefaultTemplate.objects.filter(community_name=community_name)
+    else:
+        posts = []
     community = Community.objects.get(name=community_name)
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts })
+    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined })
 
 
 def join_community(request):
     username = request.user.username
-    community = request.GET["community_name"]
+    community_name = request.GET["community_name"]
 
-    community_membership = UserCommunityMembership.objects.filter(username=username, community=community)
-
+    community_membership = UserCommunityMembership.objects.filter(username=username, community=community_name)
     if not community_membership:
         # Creating and saving a new community object
-        new_community_membership = UserCommunityMembership(username=username, community=community)
+        new_community_membership = UserCommunityMembership(username=username, community=community_name)
         new_community_membership.save()
 
     # Displaying posts at the community home page
-    posts = DefaultTemplate.objects.filter(community_name=community)
-    community = Community.objects.get(name=community)
+    posts = DefaultTemplate.objects.filter(community_name=community_name)
+
+    community = Community.objects.get(name=community_name)
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community, "is_owner": is_owner, "description": description, "posts": posts})
+    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True })
 
 
 def create_post(request):

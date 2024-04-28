@@ -17,7 +17,7 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin: 20px;
+            margin: 20px auto;
         }
         h2 {
             text-align: center;
@@ -57,69 +57,86 @@
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
+            margin-right: 10px;
         }
         button:hover {
             background-color: #0056b3;
         }
         .actions {
             margin-top: 20px;
-            text-align: right;
+            text-align: center;
+        }
+        .top-bar {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+        }
+        .top-bar button {
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-    <form method="post" action="/logout_user">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-    <h2>Welcome to Community Builder Application</h2>
+        <div class="top-bar">
+            <button onclick="location.href='/create_community'">Create Community</button>
+            <button onclick="location.href='/my_communities'">My Communities</button>
+            <button onclick="location.href='/logout_user'">Logout</button>
+        </div>
 
-    <div class="actions">
-        <form method="post" action="/create_community">
-            {% csrf_token %}
-            <button type="submit">Create Community</button>
-        </form>
+        <h2>Welcome to Community Builder Application</h2>
+
+        <!-- Your content goes here -->
+
+        <h3>Recent Posts</h3>
+        <hr>
+        <ul>
+            {% for post in posts %}
+                <li class="post">
+                    <div>
+                        <a href="/community_home?community_name={{ post.community_name }}"> {{post.community_name}} </a>
+                        <p>Title: {{ post.title }}</p>
+                        <p>Content: {{ post.content }}</p>
+                        {% if post.event_date %} <p>Event Date: {{ post.event_date }}</p> {% endif %}
+                    </div>
+                    <div class="created-at">
+                        <p>Created at: {{ post.created_at }}</p>
+                    </div>
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+
+        <h3>Other Communities You May Like</h3>
+        <ul>
+            {% for community in communities %}
+            <form method="post" action="/community_home">
+                {% csrf_token %}
+                <li>
+                    <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
+                    <p>{{ community.description }}</p>
+                </li>
+            </form>
+
+            <form method="post" action="/join_community?community_name={{ community.name }}">
+                {% csrf_token %}
+                <li>
+                    <button type="submit">Join</button>
+                </li>
+            </form>
+            {% endfor %}
+        </ul>
     </div>
 
-    <h3>Recent Posts</h3>
-    <hr>
-    <ul>
-        {% for post in posts %}
-            <li class="post">
-                <div>
-                    <p>{{ post.community_name }}</p>
-                    <p>Title: {{ post.title }}</p>
-                    <p>Content: {{ post.content }}</p>
-                    {% if post.event_date %} <p>Event Date: {{ post.event_date }}</p> {% endif %}
-                </div>
-                <div class="created-at">
-                    <p>Created at: {{ post.created_at }}</p>
-                </div>
-            </li>
-        <hr>
-        {% endfor %}
-    </ul>
-
-    <h3>Communities</h3>
-    <ul>
-        {% for community in communities %}
-        <form method="post" action="/community_home">
-            {% csrf_token %}
-            <li>
-                <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
-                <p>{{ community.description }}</p>
-            </li>
-        </form>
-
-        <form method="post" action="/join_community?community_name={{ community.name }}">
-            {% csrf_token %}
-            <li>
-                <button type="submit">Join</button>
-            </li>
-        </form>
-        {% endfor %}
-    </ul>
-</div>
+    <script>
+        function toggleSidebar() {
+            var sidebarMenu = document.getElementById("sidebar-menu");
+            sidebarMenu.style.display === "none" ? sidebarMenu.style.display = "block" : sidebarMenu.style.display = "none";
+        }
+    </script>
 </body>
 </html>

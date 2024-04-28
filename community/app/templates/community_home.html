@@ -41,6 +41,14 @@
             border-radius: 5px;
             cursor: pointer;
         }
+         .join-button {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
         .button-group {
             display: flex;
             justify-content: space-between;
@@ -62,10 +70,15 @@
                     <button type="submit">Create Template</button>
                 </form>
             {% endif %}
-            <form method="post" action="/create_post?community_name={{ community_name }}">
-                {% csrf_token %}
-                <button type="submit">Create Post</button>
-            </form>
+            {% if is_joined %}
+                <form method="post" action="/create_post?community_name={{ community_name }}">
+                    {% csrf_token %}
+                    <button type="submit">Create Post</button>
+                </form>
+            {% else %}
+                <a href="/join_community?community_name={{ community_name }}" class="join-button">Join</a>
+            {% endif %}
+
         </div>
         <h3>Recent Posts</h3>
         <hr>
