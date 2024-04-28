@@ -90,15 +90,17 @@ def community_home(request):
     community_membership = UserCommunityMembership.objects.filter(username=username, community=community_name)
 
     is_joined = len(community_membership) == 1
+    community = Community.objects.get(name=community_name)
+    description = community.description
+    is_public = community.privacy == "public"
+    is_owner = community.owner == request.user.username
 
-    if is_joined:
+    if is_joined or is_public:
         posts = DefaultTemplate.objects.filter(community_name=community_name)
     else:
         posts = []
-    community = Community.objects.get(name=community_name)
-    description = community.description
-    is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined })
+
+    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined})
 
 
 def join_community(request):
