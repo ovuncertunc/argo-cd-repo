@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        p {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .actions a {
+            margin-right: 10px;
+            color: #007bff;
+        }
+        .actions a:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Communities</h1>
+    <ul>
+        {% for community in communities %}
+        <form method="post" action="/community_home">
+            {% csrf_token %}
+            <li>
+                <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
+                <p>{{ community.description }}</p>
+            </li>
+        </form>
+        {% endfor %}
+    </ul>
+    <div class="actions">
+        <a href="/create_community">Create Community</a>
+         <a href="/home" class="home-button">Home</a>
+        <a href="/logout_user">Logout</a>
+    </div>
+</body>
+</html>
