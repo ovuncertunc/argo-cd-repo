@@ -46,8 +46,12 @@ def register(request):
     return render(request, 'authenticate/register.html', {})
 
 def home(request=None):
-    communities = Community.objects.all()
-    return render(request, 'home.html',  {'communities': communities})
+    username = request.user.username
+    joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
+    posts = DefaultTemplate.objects.filter(community_name__in=joined_communities).order_by('-created_at')[:3]
+
+    all_communities = Community.objects.exclude(name__in=joined_communities)
+    return render(request, 'home.html',  {'communities': all_communities, "posts": posts})
 
 def create_community(request):
     if request.method == 'POST':
@@ -80,12 +84,21 @@ def community_home(request):
 
 def join_community(request):
     username = request.user.username
-    community = request.community_name
+    community = request.GET["community_name"]
 
-    # Creating and saving a new community object
-    new_community_membership = UserCommunityMembership(username=username, community=community)
-    new_community_membership.save()
-    return render(request, 'community_home.html', {'community_name': community})
+    community_membership = UserCommunityMembership.objects.filter(username=username, community=community)
+
+    if not community_membership:
+        # Creating and saving a new community object
+        new_community_membership = UserCommunityMembership(username=username, community=community)
+        new_community_membership.save()
+
+    # Displaying posts at the community home page
+    posts = DefaultTemplate.objects.filter(community_name=community)
+    community = Community.objects.get(name=community)
+    description = community.description
+    is_owner = community.owner == request.user.username
+    return render(request, 'community_home.html', {'community_name': community, "is_owner": is_owner, "description": description, "posts": posts})
 
 
 def create_post(request):

@@ -10,5 +10,6 @@ urlpatterns = [
     path('logout_user', views.logout_user, name='logout_user'),
     path('create_community', login_required(views.create_community), name='create_community'),
     path('community_home', login_required(views.community_home), name='community_home'),
-    path('create_post', login_required(views.create_post), name='create_post')
+    path('create_post', login_required(views.create_post), name='create_post'),
+    path('join_community', login_required(views.join_community), name='join_community')
 ]

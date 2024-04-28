@@ -8,6 +8,7 @@ class Community(models.Model):
     description = models.CharField(max_length=300)
 
 class UserCommunityMembership(models.Model):
+    objects = None
     username = models.CharField(max_length=30)
     community = models.CharField(max_length=100)
     joined_date = models.DateTimeField(default=now, editable=False)
