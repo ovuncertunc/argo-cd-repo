@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from .models import Community, DefaultTemplate, UserCommunityMembership
 from .forms import CommunityCreationForm, DefaultTemplateForm
+from datetime import datetime
 
 def login_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -70,10 +71,11 @@ def create_community(request):
 
 def community_home(request):
     community_name = request.GET["community_name"]
+    posts = DefaultTemplate.objects.filter(community_name=community_name)
     community = Community.objects.get(name=community_name)
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description })
+    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts })
 
 
 def join_community(request):
@@ -96,12 +98,12 @@ def create_post(request):
             content = form.cleaned_data['content']
             event_date = form.cleaned_data['event_date']
             author_username = request.user.username
-
+            created_at = datetime.now().date()
             # Creating and saving a new community object
-            new_post = DefaultTemplate(title=title, content=content, event_date=event_date, community_name=community_name, author_username=author_username)
+            new_post = DefaultTemplate(title=title, content=content, event_date=event_date, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
-
-            return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
+            return community_home(request)
+            #return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
 
     return render(request, 'create_post.html', {'community_name': community_name})
 

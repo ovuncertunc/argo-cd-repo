@@ -4,16 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: calc(50% - 20px); /* Half of the width with one unit of margin on each side */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px; /* One unit of margin from the top and bottom */
+        }
+        .post {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px; /* Add margin between posts */
+        }
+        .created-at {
+            font-size: 10px;
+            margin-top: 100px; /* Move the created_at text above the line break */
+        }
+        .home-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px; /* Add some spacing between the buttons */
+        }
+        .button-group button {
+            flex: 0 0 49%; /* Make the buttons take up equal width */
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the {{ community_name }}</h1>
-    <p>{{ description }}</p>
-    {% if is_owner %}
-        <form method="post" action="/create_template">
-            {% csrf_token %}
-            <button type="submit">Create Template</button>
-        </form>
-    {% endif %}
-    <button type="submit"><a href="/create_post?community_name={{ community_name }}">Create Post</a></button>
+    <div class="container">
+        <h2>Welcome to the {{ community_name }}</h2>
+        <p>{{ description }}</p>
+        <div class="button-group">
+            {% if is_owner %}
+                <form method="post" action="/create_template">
+                    {% csrf_token %}
+                    <button type="submit">Create Template</button>
+                </form>
+            {% endif %}
+            <form method="post" action="/create_post?community_name={{ community_name }}">
+                {% csrf_token %}
+                <button type="submit">Create Post</button>
+            </form>
+        </div>
+        <h3>Recent Posts</h3>
+        <hr>
+        <ul>
+            {% for post in posts %}
+                <li class="post">
+                    <div>
+                        <p>Title: {{ post.title }}</p>
+                        <p>Content: {{ post.content }}</p>
+                        {% if post.event_date %} <p>Event Date: {{ post.event_date }}</p> {% endif %}
+                    </div>
+                    <div class="created-at">
+                        <p>Created at: {{ post.created_at }}</p>
+                    </div>
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    </div>
+    <a href="/home" class="home-button">Home</a>
 </body>
 </html>

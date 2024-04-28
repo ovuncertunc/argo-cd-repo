@@ -13,10 +13,12 @@ class UserCommunityMembership(models.Model):
     joined_date = models.DateTimeField(default=now, editable=False)
 
 class DefaultTemplate(models.Model):
+    objects = None
     title = models.CharField(max_length=100)
     content = models.CharField(max_length=1000)
     #photo = models.ImageField(upload_to='images')
     #location = models.FloatField()
-    event_date = models.DateTimeField(default=now)
+    event_date = models.DateTimeField(null=True, blank=True)
     community_name = models.CharField(max_length=100)
     author_username = models.CharField(max_length=30)
+    created_at = models.DateTimeField(default=now, editable=False)
