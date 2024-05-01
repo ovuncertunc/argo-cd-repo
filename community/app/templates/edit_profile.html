@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Profile</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    form {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    label {
+        font-weight: bold;
+    }
+    input[type="text"],
+    input[type="date"],
+    textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        margin-bottom: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    input[type="file"] {
+        margin-top: 6px;
+        margin-bottom: 16px;
+    }
+    .profile-picture {
+        display: block;
+        margin-top: 10px;
+        width: 300px;
+        height: auto;
+    }
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+<form method="post" enctype="multipart/form-data" action="edit_profile">
+    {% csrf_token %}
+    <div>
+        <label class="required-label" for="first_name">First Name:</label>
+        <br>
+        {{ form.first_name }}
+    </div>
+    <div>
+        <label class="required-label" for="last_name">Last Name:</label>
+        <br>
+        {{ form.last_name }}
+    </div>
+    <div>
+        <label for="birthdate">Birth Date:</label>
+        <br>
+        {{ form.birthdate }}
+    </div>
+    <div>
+        <label for="about_me">About me:</label>
+        <br>
+        {{ form.about_me }}
+    </div>
+    <div>
+        <label for="profile_picture">Profile Picture:</label>
+        <br>
+        {{ form.profile_picture }}
+        <br>
+        {% if url %}
+        <img src="{{ url }}" alt="Profile Picture" class="profile-picture">
+        {% endif %}
+    </div>
+    <br>
+    <button type="submit">Upload</button>
+</form>
+</body>
+</html>
