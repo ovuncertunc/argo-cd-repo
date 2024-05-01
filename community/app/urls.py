@@ -12,5 +12,7 @@ urlpatterns = [
     path('community_home', login_required(views.community_home), name='community_home'),
     path('my_communities', login_required(views.my_communities), name='my_communities'),
     path('create_post', login_required(views.create_post), name='create_post'),
-    path('join_community', login_required(views.join_community), name='join_community')
+    path('join_community', login_required(views.join_community), name='join_community'),
+    path('edit_profile', login_required(views.edit_profile), name='edit_profile'),
+    path('my_profile', login_required(views.my_profile), name='my_profile')
 ]

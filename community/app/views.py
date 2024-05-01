@@ -3,9 +3,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect
 from django.urls import reverse
-from .models import Community, DefaultTemplate, UserCommunityMembership
-from .forms import CommunityCreationForm, DefaultTemplateForm
+from .models import Community, Posts, UserProfile, UserCommunityMembership
+from .forms import CommunityCreationForm, PostForm, UserProfileForm
 from datetime import datetime
+from django.conf import settings
 
 def login_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -48,7 +49,7 @@ def register(request):
 def home(request=None):
     username = request.user.username
     joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
-    posts = DefaultTemplate.objects.filter(community_name__in=joined_communities).order_by('-created_at')[:3]
+    posts = Posts.objects.filter(community_name__in=joined_communities).order_by('-created_at')[:3]
 
     all_communities = Community.objects.exclude(name__in=joined_communities)
     return render(request, 'home.html',  {'communities': all_communities, "posts": posts})
@@ -96,7 +97,7 @@ def community_home(request):
     is_owner = community.owner == request.user.username
 
     if is_joined or is_public:
-        posts = DefaultTemplate.objects.filter(community_name=community_name)
+        posts = Posts.objects.filter(community_name=community_name)
     else:
         posts = []
 
@@ -114,7 +115,7 @@ def join_community(request):
         new_community_membership.save()
 
     # Displaying posts at the community home page
-    posts = DefaultTemplate.objects.filter(community_name=community_name)
+    posts = Posts.objects.filter(community_name=community_name)
 
     community = Community.objects.get(name=community_name)
     description = community.description
@@ -125,7 +126,7 @@ def join_community(request):
 def create_post(request):
     community_name = request.GET["community_name"]
     if request.method == 'POST':
-        form = DefaultTemplateForm(request.POST)
+        form = Posts(request.POST)
         if form.is_valid():
             # Extracting data from the form
             title = form.cleaned_data['title']
@@ -134,10 +135,55 @@ def create_post(request):
             author_username = request.user.username
             created_at = datetime.now().date()
             # Creating and saving a new community object
-            new_post = DefaultTemplate(title=title, content=content, event_date=event_date, community_name=community_name, author_username=author_username, created_at=created_at)
+            new_post = Posts(title=title, content=content, event_date=event_date, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
             return community_home(request)
             #return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
 
     return render(request, 'create_post.html', {'community_name': community_name})
 
+
+def edit_profile(request):
+    url = None
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES)
+        username = request.user.username
+        existing_user = UserProfile.objects.get(username=username)
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            birthdate = form.cleaned_data['birthdate']
+            about_me = form.cleaned_data['about_me']
+            profile_picture = form.cleaned_data['profile_picture']
+            if existing_user:
+                existing_user.first_name = first_name
+                existing_user.last_name = last_name
+                existing_user.birthdate = birthdate
+                existing_user.about_me = about_me
+                if profile_picture:
+                    existing_user.profile_picture.save(profile_picture.name, profile_picture)
+                existing_user.save()
+                return render(request, "my_profile.html", {"user_profile": existing_user, "MEDIA_URL": settings.MEDIA_URL})
+            else:
+                user_profile = UserProfile(username=username, first_name=first_name, last_name=last_name, birthdate=birthdate, about_me=about_me)
+                if profile_picture:
+                    user_profile.profile_picture.save(profile_picture.name, profile_picture)
+                user_profile.save()
+
+                return render(request, "my_profile.html", {"user_profile": user_profile,"MEDIA_URL": settings.MEDIA_URL})
+    else:
+        username = request.user.username
+        existing_user = UserProfile.objects.get(username=username)
+        if existing_user:
+            # Add existing field values to the corresponding boxes in the html form
+            form = UserProfileForm(instance=existing_user)
+            url = form.initial["profile_picture"].url
+        else:
+            form = UserProfileForm()
+    return render(request, "edit_profile.html", {"form": form, "url": url})
+
+def my_profile(request):
+    username = request.user.username
+    user_profile = UserProfile.objects.get(username=username)
+
+    return render(request, "my_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL})

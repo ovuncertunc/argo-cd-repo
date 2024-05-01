@@ -6,3 +6,4 @@ dist/*
 ui/dist/app/*
 !ui/dist/app/gitkeep
 community/.env
+community/.env-container
