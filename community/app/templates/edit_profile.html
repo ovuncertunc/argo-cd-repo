@@ -84,12 +84,13 @@
         <br>
         {{ form.profile_picture }}
         <br>
-        {% if url %}
-        <img src="{{ url }}" alt="Profile Picture" class="profile-picture">
+        {% if profile_picture %}
+        <img src="{{ profile_picture.url }}" alt="Profile Picture" class="profile-picture">
         {% endif %}
     </div>
     <br>
     <button type="submit">Upload</button>
+    <button type="button" onclick="window.location.href='/home'" style="margin-left: 10px;">Cancel</button>
 </form>
 </body>
 </html>

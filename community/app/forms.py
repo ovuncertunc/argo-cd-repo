@@ -4,7 +4,7 @@ from .models import Community, Posts, UserProfile, UserCommunityMembership
 class CommunityCreationForm(forms.ModelForm):
     class Meta:
         model = Community
-        fields = ['name', 'privacy']
+        fields = ['name', 'privacy', 'description']
 
 class PostForm(forms.ModelForm):
     class Meta:

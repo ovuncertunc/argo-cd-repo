@@ -126,7 +126,7 @@ def join_community(request):
 def create_post(request):
     community_name = request.GET["community_name"]
     if request.method == 'POST':
-        form = Posts(request.POST)
+        form = PostForm(request.POST)
         if form.is_valid():
             # Extracting data from the form
             title = form.cleaned_data['title']
@@ -148,7 +148,7 @@ def edit_profile(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES)
         username = request.user.username
-        existing_user = UserProfile.objects.get(username=username)
+        existing_user = UserProfile.objects.filter(username=username).exists()
         if form.is_valid():
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
@@ -156,14 +156,15 @@ def edit_profile(request):
             about_me = form.cleaned_data['about_me']
             profile_picture = form.cleaned_data['profile_picture']
             if existing_user:
-                existing_user.first_name = first_name
-                existing_user.last_name = last_name
-                existing_user.birthdate = birthdate
-                existing_user.about_me = about_me
+                user = UserProfile.objects.get(username=username)
+                user.first_name = first_name
+                user.last_name = last_name
+                user.birthdate = birthdate
+                user.about_me = about_me
                 if profile_picture:
-                    existing_user.profile_picture.save(profile_picture.name, profile_picture)
-                existing_user.save()
-                return render(request, "my_profile.html", {"user_profile": existing_user, "MEDIA_URL": settings.MEDIA_URL})
+                    user.profile_picture.save(profile_picture.name, profile_picture)
+                user.save()
+                return render(request, "my_profile.html", {"user_profile": user, "MEDIA_URL": settings.MEDIA_URL})
             else:
                 user_profile = UserProfile(username=username, first_name=first_name, last_name=last_name, birthdate=birthdate, about_me=about_me)
                 if profile_picture:
@@ -173,17 +174,21 @@ def edit_profile(request):
                 return render(request, "my_profile.html", {"user_profile": user_profile,"MEDIA_URL": settings.MEDIA_URL})
     else:
         username = request.user.username
-        existing_user = UserProfile.objects.get(username=username)
+        existing_user = UserProfile.objects.filter(username=username).exists()
         if existing_user:
             # Add existing field values to the corresponding boxes in the html form
-            form = UserProfileForm(instance=existing_user)
-            url = form.initial["profile_picture"].url
+            user = UserProfile.objects.get(username=username)
+            form = UserProfileForm(instance=user)
+            profile_picture = form.initial["profile_picture"]
         else:
             form = UserProfileForm()
-    return render(request, "edit_profile.html", {"form": form, "url": url})
+            profile_picture = None
+    return render(request, "edit_profile.html", {"form": form, "profile_picture": profile_picture})
 
 def my_profile(request):
     username = request.user.username
-    user_profile = UserProfile.objects.get(username=username)
-
-    return render(request, "my_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL})
+    if UserProfile.objects.filter(username=username).exists():
+        user_profile = UserProfile.objects.get(username=username)
+        return render(request, "my_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL})
+    else:
+        return edit_profile(request)

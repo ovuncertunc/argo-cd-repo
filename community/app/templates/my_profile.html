@@ -79,7 +79,11 @@
     <p>Birthdate: {{ user_profile.birthdate }}</p>
     <p>About me: {{ user_profile.about_me }}</p>
     <div>
-        <img src="{{ MEDIA_URL }}{{ user_profile.profile_picture }}" alt="Profile Picture" class="profile-picture">
+        {% if user_profile.profile_picture %}
+            <img src="{{ MEDIA_URL }}{{ user_profile.profile_picture }}" alt="Profile Picture" class="profile-picture">
+        {% else %}
+            <p>No profile picture available</p>
+        {% endif %}
     </div>
     <div class="actions">
          <a href="/home" class="home-button">Home</a>

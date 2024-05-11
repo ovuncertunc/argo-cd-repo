@@ -65,14 +65,15 @@
         <p>{{ description }}</p>
         <div class="button-group">
             {% if is_owner %}
-                <form method="post" action="/create_template">
+                <form method="get" action="/create_template">
                     {% csrf_token %}
                     <button type="submit">Create Template</button>
                 </form>
             {% endif %}
             {% if is_joined %}
-                <form method="post" action="/create_post?community_name={{ community_name }}">
+                <form method="get" action="/create_post">
                     {% csrf_token %}
+                    <input type="hidden" name="community_name" value="{{ community_name }}">
                     <button type="submit">Create Post</button>
                 </form>
             {% else %}
