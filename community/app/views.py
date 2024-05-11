@@ -51,8 +51,13 @@ def home(request=None):
     joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
     posts = Posts.objects.filter(community_name__in=joined_communities).order_by('-created_at')[:3]
 
+    for post in posts:
+        post_author = post.author_username
+        user_profile = UserProfile.objects.get(username=post_author)
+        post.author_profile_picture = user_profile.profile_picture
+
     all_communities = Community.objects.exclude(name__in=joined_communities)
-    return render(request, 'home.html',  {'communities': all_communities, "posts": posts})
+    return render(request, 'home.html',  {'communities': all_communities, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
 
 def my_communities(request):
     username = request.user.username
@@ -62,23 +67,24 @@ def my_communities(request):
 
 def create_community(request):
     if request.method == 'POST':
-        form = CommunityCreationForm(request.POST)
+        form = CommunityCreationForm(request.POST, request.FILES)
         if form.is_valid():
             # Extracting data from the form
             community_name = form.cleaned_data['name']
             community_privacy = form.cleaned_data['privacy']
             description = form.cleaned_data['description']
+            community_photo = form.cleaned_data['community_photo']
             owner = request.user
 
             # Creating and saving a new community object
-            new_community = Community(name=community_name, privacy=community_privacy, owner=owner, description=description)
+            new_community = Community(name=community_name, privacy=community_privacy, owner=owner, description=description, community_photo=community_photo)
             new_community.save()
 
             # Community creator is automatically joined to the community
             new_community_membership = UserCommunityMembership(username=request.user.username, community=community_name)
             new_community_membership.save()
 
-            return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True, "is_joined": True})
+            return render(request, 'community_home.html', {'community_name': community_name, "community_photo": new_community.community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True})
     else:
         form = CommunityCreationForm()
 
@@ -95,13 +101,19 @@ def community_home(request):
     description = community.description
     is_public = community.privacy == "public"
     is_owner = community.owner == request.user.username
-
+    community_photo = community.community_photo
     if is_joined or is_public:
         posts = Posts.objects.filter(community_name=community_name)
+
+        for post in posts:
+            post_author = post.author_username
+            user_profile = UserProfile.objects.get(username=post_author)
+            post.author_profile_picture = user_profile.profile_picture
+
     else:
         posts = []
 
-    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined})
+    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined})
 
 
 def join_community(request):
@@ -118,9 +130,10 @@ def join_community(request):
     posts = Posts.objects.filter(community_name=community_name)
 
     community = Community.objects.get(name=community_name)
+    community_photo = community.community_photo
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True })
+    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True})
 
 
 def create_post(request):

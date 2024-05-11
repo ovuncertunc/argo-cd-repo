@@ -36,23 +36,21 @@
         margin-top: 6px;
         margin-bottom: 16px;
     }
+    .required-label::before {
+        content: "*";
+        color: red;
+        display: inline-block;
+        margin-right: 5px;
+        vertical-align: middle; /* Align the asterisk vertically with the text */
+    }
+    label {
+        vertical-align: middle; /* Align the labels vertically with the input fields */
+    }
     .profile-picture {
         display: block;
         margin-top: 10px;
         width: 300px;
         height: auto;
-    }
-    button {
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-    button:hover {
-        background-color: #0056b3;
     }
 </style>
 </head>

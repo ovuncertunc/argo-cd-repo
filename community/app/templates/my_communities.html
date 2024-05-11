@@ -48,34 +48,51 @@
         }
         .actions {
             margin-top: 20px;
+            margin-bottom: 20px;
             text-align: center;
         }
         .actions a {
             margin-right: 10px;
             color: #007bff;
         }
-        .actions a:last-child {
-            margin-right: 0;
+
+        .community-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 10%;
+            object-fit: cover;
+            margin-right: 20px; /* Added margin for spacing */
+        }
+        .community-info {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
 <body>
     <h1>My Communities</h1>
+    <div class="actions">
+        <a href="/create_community">Create Community</a>
+        <a href="/home" class="home-button">Home</a>
+        <a href="/logout_user">Logout</a>
+    </div>
     <ul>
         {% for community in communities %}
         <form method="post" action="/community_home">
             {% csrf_token %}
             <li>
-                <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
-                <p>{{ community.description }}</p>
+                <a href="/community_home?community_name={{ community.name }}" class="community-info">
+                    {% if community.community_photo %}
+                        <img src="{{ community.community_photo.url }}" alt="Community Photo" class="community-photo">
+                    {% endif %}
+                    <div>
+                        <h3>{{ community.name }}</h3>
+                        <p>{{ community.description }}</p>
+                    </div>
+                </a>
             </li>
         </form>
         {% endfor %}
     </ul>
-    <div class="actions">
-        <a href="/create_community">Create Community</a>
-         <a href="/home" class="home-button">Home</a>
-        <a href="/logout_user">Logout</a>
-    </div>
 </body>
 </html>

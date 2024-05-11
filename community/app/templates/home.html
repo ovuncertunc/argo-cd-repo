@@ -19,12 +19,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
         }
-        h2 {
-            text-align: center;
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-        }
-        h3 {
+        h2, h3 {
             text-align: center;
             margin-top: 0.5em;
             margin-bottom: 0.5em;
@@ -78,6 +73,35 @@
         .top-bar button {
             margin-right: 10px;
         }
+        .profile-picture {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: relative;
+            object-fit: cover
+        }
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .author-details {
+            flex-grow: 1;
+        }
+        .post-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .created-at {
+            margin-top: 5px;
+        }
+        .community-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 10%;
+            object-fit: cover;
+            margin-right: 20px; /* Added margin for spacing */
+        }
     </style>
 </head>
 <body>
@@ -91,15 +115,21 @@
 
         <h2>Welcome to Community Builder Application</h2>
 
-        <!-- Your content goes here -->
-
         <h3>Recent Posts</h3>
         <hr>
         <ul>
             {% for post in posts %}
                 <li class="post">
-                    <div>
-                        <a href="/community_home?community_name={{ post.community_name }}"> {{post.community_name}} </a>
+                    <a href="/community_home?community_name={{ post.community_name }}"> Community: {{post.community_name}} </a>
+                    <div class="author-info">
+                        {% if post.author_profile_picture %}
+                            <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                        {% endif %}
+                        <div class="author-details">
+                            <p>Author: {{ post.author_username }}</p>
+                        </div>
+                    </div>
+                    <div class="post-content">
                         <p>Title: {{ post.title }}</p>
                         <p>Content: {{ post.content }}</p>
                         {% if post.event_date %} <p>Event Date: {{ post.event_date }}</p> {% endif %}
@@ -108,8 +138,8 @@
                         <p>Created at: {{ post.created_at }}</p>
                     </div>
                 </li>
-                <hr>
             {% endfor %}
+            <hr>
         </ul>
 
         <h3>Other Communities You May Like</h3>
@@ -119,8 +149,16 @@
                 {% csrf_token %}
                 <li>
                     <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
-                    <p>{{ community.description }}</p>
+                    <div>
+                        {% if community.community_photo %}
+                            <img src="{{ MEDIA_URL }}{{ community.community_photo }}" alt="Community Photo" class="community-photo">
+                            <p>{{ community.description }}</p>
+                        {% else %}
+                            <p>{{ community.description }}</p>
+                        {% endif %}
+                    </div>
                 </li>
+
             </form>
 
             <form method="post" action="/join_community?community_name={{ community.name }}">

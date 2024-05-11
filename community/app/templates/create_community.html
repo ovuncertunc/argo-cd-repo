@@ -1,26 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Community</title>
+<meta charset="UTF-8">
+<title>Create Community</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+    form {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    label {
+        font-weight: bold;
+    }
+    input[type="text"],
+    input[type="date"],
+    textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        margin-bottom: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    input[type="file"] {
+        margin-top: 6px;
+        margin-bottom: 16px;
+    }
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .required-label::before {
+        content: "*";
+        color: red;
+        display: inline-block;
+        margin-right: 5px;
+        vertical-align: middle; /* Align the asterisk vertically with the text */
+    }
+    label {
+        vertical-align: middle; /* Align the labels vertically with the input fields */
+    }
+</style>
 </head>
 <body>
-    <h2>Create a New Community</h2>
-    <form method="post" action="/create_community">
-        {% csrf_token %}
-        {{ form.name.label_tag }}
-        {{ form.name }}
-        <br><br>
-        <label for="description">Description:</label>
+<form method="post" enctype="multipart/form-data" action="create_community">
+    {% csrf_token %}
+    <div>
+        <label class="required-label" for="name">Community Name:</label>
         <br>
-        <textarea id="description" name="description" rows="4" cols="50"></textarea>
-        <br><br>
-        <label for="public">Public</label>
-        <input type="radio" id="public" name="privacy" value="public">
-        <label for="private">Private</label>
-        <input type="radio" id="private" name="privacy" value="private">
-        <br><br>
-        <button type="submit">Create Community</button>
-        <button type="button" onclick="window.location.href='/home'" style="margin-left: 10px;">Cancel</button>
-    </form>
+        {{ form.name }}
+    </div>
+    <div>
+        <label class="required-label" for="description">Description:</label>
+        <br>
+        {{ form.description }}
+    </div>
+    <div>
+        <label class="required-label" for="privacy">Privacy:</label>
+        <br>
+        <ul>
+        {{ form.privacy }}
+        </ul>
+    </div>
+    <div>
+        <label for="community_photo">Community Picture:</label>
+        <br>
+        {{ form.community_photo }}
+        <br>
+    </div>
+    <br>
+    <button type="submit">Create Community</button>
+    <button type="button" onclick="window.location.href='/home'" style="margin-left: 10px;">Cancel</button>
+</form>
 </body>
 </html>

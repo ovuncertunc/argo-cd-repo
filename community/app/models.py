@@ -7,6 +7,7 @@ class Community(models.Model):
     privacy = models.CharField(max_length=10)
     owner = models.CharField(max_length=30)
     description = models.CharField(max_length=300)
+    community_photo = models.ImageField(upload_to='community_picture/', default=None, null=True, blank=True)
 
 class UserCommunityMembership(models.Model):
     objects = None
@@ -23,7 +24,7 @@ class Posts(models.Model):
     event_date = models.DateTimeField(null=True, blank=True)
     community_name = models.CharField(max_length=100)
     author_username = models.CharField(max_length=30)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
 class UserProfile(models.Model):
     objects = None
