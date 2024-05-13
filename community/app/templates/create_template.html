@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Function to handle adding new text-box pair
+            function addTextBoxPair() {
+                var textBoxPair = $('<div class="text-box-pair">' +
+                                        '<div><label>Field Name:</label><input type="text" name="field_name" class="form-control"></div>' +
+                                        '<div><label>Field Type:</label><select name="field_type" class="form-control">' +
+                                            '<option value="text">text</option>' +
+                                            '<option value="date">date</option>' +
+                                            '<option value="audio/mpeg">Audio/MPEG</option>' +
+                                            '<option value="audio/ogg">Audio/OGG</option>' +
+                                            '<option value="photo">Photo</option>' +
+                                            '<option value="geolocation">Geolocation</option>' +
+                                            '<option value="video/ogg">Video/OGG</option>' +
+                                        '</select></div>' +
+                                    '</div>');
+                $('.text-boxes').append(textBoxPair);
+            }
+
+            // Plus button click event handler
+            $('.sign-bttn').click(function(e) {
+                e.preventDefault(); // Prevent the default action
+                addTextBoxPair(); // Add a new text-box pair
+            });
+
+            // Form submission event handler
+            $('form').submit(function(e) {
+                e.preventDefault(); // Prevent the form submission
+                var template = {};
+
+                // Loop through each text-box pair
+                $('.text-box-pair').each(function(index) {
+                    // Get the field name and data type entered by the user
+                    var fieldName = $(this).find('input[name="field_name"]').val();
+                    var fieldType = $(this).find('select[name="field_type"]').val();
+
+                    // Add the field name and data type to the template object
+                    template[fieldName] = fieldType;
+                });
+
+                // Convert the template object to a JSON string
+                var template_json = JSON.stringify(template);
+
+                // Add the JSON string as a hidden input field to the form
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'template_dict',
+                    value: template_json
+                }).appendTo('form');
+
+                // Submit the form
+                $(this).unbind('submit').submit(); // Re-submit the form
+            });
+        });
+    </script>
+    <style>
+        .container {
+            width: calc(30% - 20px);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+        }
+        .text-boxes {
+            margin-bottom: 10px;
+        }
+        .sign-bttn {
+            text-align: left;
+            margin-top: 10px; /* Added margin-top */
+        }
+        .text-box-pair {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .text-box-pair label {
+            margin-right: 10px;
+        }
+        .text-box-pair input, .text-box-pair select {
+            flex: 1;
+        }
+        h2 {
+           text-align: center;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 7px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            width: 70px;
+            display: block;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .template-name-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px; /* Added margin-bottom */
+        }
+        .template-name-container label {
+            margin-right: 10px;
+        }
+        .template-name-container input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Community Specific Template for {{community_name}}</h2>
+    <form method="post" action="create_template">
+        {% csrf_token %}
+        {{ form.name.label_tag }}
+        {{ form.name }}
+        <div class="container">
+            <div class="template-name-container">
+                <label class="template_name" for="template_name">Template Name:</label>
+                {{ form.template_name }}
+            </div>
+            <button type="button" class="btn btn-info sign-bttn">+</button>
+            <div class="text-boxes">
+                <div class="text-box-pair">
+                    <div><label>Field Name:</label><input type="text" name="field_name" class="form-control"></div>
+                    <div><label>Field Type:</label>
+                        <select name="field_type" class="form-control">
+                            <option value="text">Text</option>
+                            <option value="date">Date</option>
+                            <option value="audio/mpeg">Audio/MPEG</option>
+                            <option value="audio/ogg">Audio/OGG</option>
+                            <option value="video/ogg">Video/OGG</option>
+                            <option value="Photo">Photo</option>
+                            <option value="Geolocation">Geolocation</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% csrf_token %}
+            <input type="hidden" name="community_name" value="{{ community_name }}">
+
+            <button class="button" type="submit">Submit</button>
+        </div>
+    </form>
+</body>
+</html>

@@ -8,31 +8,98 @@
             color: red;
             display: inline-block;
             margin-right: 5px;
-            vertical-align: middle; /* Align the asterisk vertically with the text */
+            vertical-align: middle;
         }
         label {
-            vertical-align: middle; /* Align the labels vertically with the input fields */
+            vertical-align: middle;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
         }
     </style>
+    <script>
+        function submitForm() {
+            var selectedTemplate = document.getElementById("template_selector").value;
+            document.getElementById("selected_template").value = selectedTemplate;
+            document.getElementById("template_form").submit();
+        }
+
+        function postSubmitForm() {
+        // Create an empty dictionary to store field names and values
+        var formData = {};
+
+        // Iterate over input fields and collect their values
+        var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="geolocation"], .text-box-pair input[type="date"]');
+        inputs.forEach(function(input) {
+            formData[input.name] = input.value;
+        });
+
+        // Convert the dictionary to a JSON string
+        var formDataJSON = JSON.stringify(formData);
+
+        // Create a hidden input field to hold the JSON data
+        var dataField = document.createElement('input');
+        dataField.setAttribute('type', 'hidden');
+        dataField.setAttribute('name', 'form_data');
+        dataField.setAttribute('value', formDataJSON);
+
+        // Append the hidden input field to the form
+        document.getElementById('post_form').appendChild(dataField);
+
+        // Submit the form
+        document.getElementById('post_form').submit();
+    }
+    </script>
 </head>
 <body>
     <h2>Create a New Post for {{ community_name }}</h2>
-    <form method="post" action="/create_post?community_name={{ community_name }}">
+    {% if select_dropdown_list %}
+    <label for="template_selector">Select Template:</label>
+    <select id="template_selector" onchange="submitForm()">
+        <option value="empty">-Please Select Template-</option>
+        <option value="Default Template">Default Template</option>
+        {% for template in templates %}
+            <option value="{{template}}">{{template}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Hidden form to send the POST request -->
+    <form id="template_form" method="post" action="/display_community_specific_template_post" style="display: none;">
         {% csrf_token %}
-        {{ form.name.label_tag }}
-        {{ form.name }}
-        <br><br>
-        <label class="required-label" for="title">Title:</label>
-        <input type="text" id="title" name="title">
-        <br><br>
-        <label class="required-label" for="content">Content:</label>
-        <textarea id="content" name="content" rows="4" cols="50"></textarea>
-        <br><br>
-        <label for="event_date">Event Date:</label>
-        <input type="date" id="event_date" name="event_date">
-        <br><br>
-        <button type="submit">Create Post</button>
-        <button type="button" onclick="window.location.href='/community_home?community_name={{ community_name }}'" style="margin-left: 10px;">Cancel</button>
+        <input type="hidden" id="selected_template" name="selected_template">
+        <input type="hidden" name="community_name" value="{{ community_name }}">
     </form>
+
+    {% else %}
+    <div class="container">
+        <form id="post_form" method="post" action="/create_post?community_name={{ community_name }}&template_name={{ template_name }}">
+            {% csrf_token %}
+            <input type="hidden" name="template_name" value="{{ template_name }}">
+            {% for field_name, field_type in template_dict.items %}
+                <div class="text-box-pair">
+                    {% if field_type == "text" or field_type == "geolocation" %}
+                        <div>
+                            <label>{{ field_name }}:</label>
+                            <input type="{{ field_type }}" name="{{ field_name }}" class="form-control">
+                        </div>
+                    {% elif field_type == "audio/mpeg" or field_type == "audio/ogg" or field_type == "video/mp4" or field_type == "video/ogg" or field_type == "photo" %}
+                        --- upload screen ---
+                    {% elif field_type == "date" %}
+                    <label>{{ field_name }}:</label>
+                    <input type="{{ field_type }}" name="{{ field_name }}" value="2024-01-01" />
+                    {% else %}
+                    <p> Do nothing</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <br><br>
+            <button type="submit" id="submit_button" onclick="postSubmitForm()">Create Post</button>
+            <button type="button" id="cancel_button" onclick="window.location.href='/community_home?community_name={{ community_name }}'" style="margin-left: 10px;">Cancel</button>
+        </form>
+    </div>
+    {% endif %}
 </body>
 </html>

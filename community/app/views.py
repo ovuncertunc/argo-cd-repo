@@ -3,10 +3,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect
 from django.urls import reverse
-from .models import Community, Posts, UserProfile, UserCommunityMembership
-from .forms import CommunityCreationForm, PostForm, UserProfileForm
+from .models import Community, Posts, UserProfile, UserCommunityMembership, CommunitySpecificTemplate
+from .forms import CommunityCreationForm, PostForm, UserProfileForm, CommunitySpecificTemplateForm
 from datetime import datetime
 from django.conf import settings
+import json, ast
 
 def login_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -55,6 +56,7 @@ def home(request=None):
         post_author = post.author_username
         user_profile = UserProfile.objects.get(username=post_author)
         post.author_profile_picture = user_profile.profile_picture
+        post.template_dict = ast.literal_eval(post.template_dict)
 
     all_communities = Community.objects.exclude(name__in=joined_communities)
     return render(request, 'home.html',  {'communities': all_communities, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
@@ -109,6 +111,7 @@ def community_home(request):
             post_author = post.author_username
             user_profile = UserProfile.objects.get(username=post_author)
             post.author_profile_picture = user_profile.profile_picture
+            post.template_dict = ast.literal_eval(post.template_dict)
 
     else:
         posts = []
@@ -138,22 +141,48 @@ def join_community(request):
 
 def create_post(request):
     community_name = request.GET["community_name"]
+    templates = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
+
     if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
+
+        template_name = request.POST["template_name"]
+        author_username = request.user.username
+        created_at = datetime.now().date()
+
+        if template_name == "Default Template":
             # Extracting data from the form
-            title = form.cleaned_data['title']
-            content = form.cleaned_data['content']
-            event_date = form.cleaned_data['event_date']
-            author_username = request.user.username
-            created_at = datetime.now().date()
+            title = request.POST['title']
+            content = request.POST['content']
+            event_date = request.POST['event_date']
+            template_dict = {"title": title, "content": content, "event_date": event_date}
+
             # Creating and saving a new community object
-            new_post = Posts(title=title, content=content, event_date=event_date, community_name=community_name, author_username=author_username, created_at=created_at)
+            new_post = Posts(template_name=template_name, template_dict=template_dict, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
+
             return community_home(request)
             #return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
+        else:
+            post_content_json = request.POST["form_data"]
+            new_post = Posts(template_name=template_name, template_dict=post_content_json, community_name=community_name, author_username=author_username, created_at=created_at)
+            new_post.save()
 
-    return render(request, 'create_post.html', {'community_name': community_name})
+            return community_home(request)
+
+    return render(request, 'create_post.html', {'community_name': community_name, "templates": templates, "select_dropdown_list": True})
+
+
+def display_community_specific_template_post(request):
+    template_name = request.POST["selected_template"]
+    community_name = request.POST["community_name"]
+
+    if template_name == "Default Template":
+        template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
+    else:
+        template_dict_str = CommunitySpecificTemplate.objects.get(template_name=template_name).template_dict
+        template_dict = ast.literal_eval(template_dict_str)
+
+    return render(request, "create_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
 
 
 def edit_profile(request):
@@ -205,3 +234,20 @@ def my_profile(request):
         return render(request, "my_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL})
     else:
         return edit_profile(request)
+
+
+def create_template(request):
+    if request.method == 'POST':
+        template_dict_json = request.POST.get("template_dict")
+        template_dict = json.loads(template_dict_json)
+        template_name = request.POST.get("template_name")
+        community_name = request.POST["community_name"]
+
+        new_template = CommunitySpecificTemplate(community_name=community_name, template_name=template_name, template_dict=template_dict)
+        new_template.save()
+
+        return redirect(reverse("community_home") + f"?community_name={community_name}")
+    else:
+        community_name = request.GET["community_name"]
+        form = CommunitySpecificTemplateForm()
+        return render(request, "create_template.html", {"form": form, "community_name": community_name})

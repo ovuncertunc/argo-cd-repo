@@ -130,9 +130,9 @@
                         </div>
                     </div>
                     <div class="post-content">
-                        <p>Title: {{ post.title }}</p>
-                        <p>Content: {{ post.content }}</p>
-                        {% if post.event_date %} <p>Event Date: {{ post.event_date }}</p> {% endif %}
+                        {% for key, value in post.template_dict.items %}
+                            <p>{{ key }}: {{ value }}</p>
+                        {% endfor %}
                     </div>
                     <div class="created-at">
                         <p>Created at: {{ post.created_at }}</p>

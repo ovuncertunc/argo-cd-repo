@@ -14,5 +14,7 @@ urlpatterns = [
     path('create_post', login_required(views.create_post), name='create_post'),
     path('join_community', login_required(views.join_community), name='join_community'),
     path('edit_profile', login_required(views.edit_profile), name='edit_profile'),
-    path('my_profile', login_required(views.my_profile), name='my_profile')
+    path('my_profile', login_required(views.my_profile), name='my_profile'),
+    path('create_template', login_required(views.create_template), name='create_template'),
+    path('display_community_specific_template_post', login_required(views.display_community_specific_template_post), name='display_community_specific_template_post')
 ]
