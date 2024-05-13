@@ -151,10 +151,10 @@ def create_post(request):
 
         if template_name == "Default Template":
             # Extracting data from the form
-            title = request.POST['title']
-            content = request.POST['content']
-            event_date = request.POST['event_date']
-            template_dict = {"title": title, "content": content, "event_date": event_date}
+            title = request.POST['Title']
+            content = request.POST['Content']
+            event_date = request.POST['Event Date']
+            template_dict = {"Title": title, "Content": content, "Event Date": event_date}
 
             # Creating and saving a new community object
             new_post = Posts(template_name=template_name, template_dict=template_dict, community_name=community_name, author_username=author_username, created_at=created_at)
