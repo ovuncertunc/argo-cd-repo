@@ -129,6 +129,7 @@
                             <p>Author: {{ post.author_username }}</p>
                         </div>
                     </div>
+                    <p> Template Name: {{ post.template_name }}</p>
                     <div class="post-content">
                         {% for key, value in post.template_dict.items %}
                             <p>{{ key }}: {{ value }}</p>
