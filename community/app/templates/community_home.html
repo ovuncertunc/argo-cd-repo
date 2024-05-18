@@ -6,81 +6,162 @@
     <title>Welcome Page</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f5f5f5;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .container {
-            width: calc(50% - 20px); /* Half of the width with one unit of margin on each side */
+            width: 80%;
+            max-width: 800px;
             background-color: #fff;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin: 20px; /* One unit of margin from the top and bottom */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            text-align: center;
         }
-        .post {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px; /* Add margin between posts */
-        }
-        .created-at {
-            font-size: 10px;
-            margin-top: 100px; /* Move the created_at text above the line break */
-        }
-        .home-button {
-            position: fixed;
-            top: 60px;
-            right: 450px;
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-         .join-button {
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px; /* Add some spacing between the buttons */
-        }
-        .button-group button {
-            flex: 0 0 49%; /* Make the buttons take up equal width */
-        }
-        .profile-picture {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            position: relative;
-            object-fit: cover
-        }
-        .post-content {
-            display: flex;
-            position: relative;
-            flex-direction: column;
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
         }
         .community-photo {
             width: 100px;
             height: 100px;
             border-radius: 10%;
             object-fit: cover;
-            margin-right: 20px; /* Added margin for spacing */
+            margin: 20px 0;
+        }
+        p {
+            color: #666;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        hr {
+            border: none;
+            height: 1px;
+            background-color: #ddd;
+            margin: 20px 0;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        .post {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 96%;
+            cursor: pointer;
+        }
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .profile-picture {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .author-details {
+            font-size: 14px;
+            color: #333;
+        }
+        .post-content {
+            color: #333;
+            font-weight: bold;
+        }
+        .created-at {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .top-bar {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+            margin-top: -20px;
+            margin-right: -20px;
+            margin-left: -20px;
+        }
+        .top-bar button {
+            margin-right: 10px;
+        }
+        .clickable {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+        /* Styles for the user list popup */
+        #userListPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            max-height: 400px;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        #userListPopup ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        #userListPopup ul li {
+            padding: 5px 0;
+        }
+        #closePopup {
+            display: block;
+            text-align: right;
+            cursor: pointer;
+            color: #007bff;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
+    <h2>Welcome to {{ community_name }}</h2>
     <div class="container">
-        <h2>Welcome to the {{ community_name }}</h2>
+        <div class="top-bar">
+            <button onclick="location.href='/user_profile?my_profile=True'">My Profile</button>
+            <button onclick="location.href='/home'">Home</button>
+            <button onclick="location.href='/logout_user'">Logout</button>
+        </div>
         <div>
         {% if community_photo %}
             <img src="{{ MEDIA_URL }}{{ community_photo }}" alt="Community Photo" class="community-photo">
@@ -89,6 +170,7 @@
         {% endif %}
         </div>
         <p>{{ description }}</p>
+        <p>Users: <span id="userCount" class="clickable">{{ joined_user_list|length }}</span></p>
         <div class="button-group">
             {% if is_owner %}
                 <form method="get" action="/create_template">
@@ -106,25 +188,23 @@
             {% else %}
                 <a href="/join_community?community_name={{ community_name }}" class="join-button">Join</a>
             {% endif %}
-
         </div>
         <h3>Recent Posts</h3>
         <hr>
         <ul>
             {% for post in posts %}
-                <li class="post">
+                <li class="post" onclick="window.location.href='/display_post?post_id={{ post.id }}'">
+
                     <div class="author-info">
                         {% if post.author_profile_picture %}
                             <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
                         {% endif %}
-                        <div class="author-details">
-                            <p>Author: {{ post.author_username }}</p>
-                        </div>
-                    </div>
-                    <div class="post-content">
-                        {% for key, value in post.template_dict.items %}
-                            <p>{{ key }}: {{ value }}</p>
-                        {% endfor %}
+
+                        {% if post.title %}
+                            <h3>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h3>
+                        {% else %}
+                            <h3>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot; </h3>
+                        {% endif %}
                     </div>
                     <div class="created-at">
                         <p>Created at: {{ post.created_at }}</p>
@@ -134,6 +214,26 @@
             {% endfor %}
         </ul>
     </div>
-    <a href="/home" class="home-button">Home</a>
+
+    <!-- User List Popup -->
+    <div id="userListPopup">
+        <span id="closePopup">Close</span>
+        <h3>Joined Users</h3>
+        <ul>
+            {% for user in joined_user_list %}
+                <a href="/user_profile?my_profile=False,username={{ user }}">{{ user }}</a>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        document.getElementById('userCount').addEventListener('click', function() {
+            document.getElementById('userListPopup').style.display = 'block';
+        });
+
+        document.getElementById('closePopup').addEventListener('click', function() {
+            document.getElementById('userListPopup').style.display = 'none';
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: calc(50% - 20px);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h2 {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        p {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .community-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 10%;
+            object-fit: cover;
+            margin-right: 20px; /* Added margin for spacing */
+        }
+        .home-button {
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .home-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Communities with "{{ query }}"</h2>
+            <a href="/home" class="home-button">Home</a>
+        </div>
+        <ul>
+            {% for community in communities %}
+                <li>
+                    <a href="/community_home?community_name={{ community.name }}">{{ community.name }}</a>
+                    <div>
+                        {% if community.community_photo %}
+                            <img src="{{ MEDIA_URL }}{{ community.community_photo }}" alt="Community Photo" class="community-photo">
+                            <p>{{ community.description }}</p>
+                        {% else %}
+                            <p>{{ community.description }}</p>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

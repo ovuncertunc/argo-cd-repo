@@ -64,15 +64,19 @@
     </style>
 </head>
 <body>
-    <h1>My Profile</h1>
-    <ul>
-        <form method="get" action="/edit_profile">
-            {% csrf_token %}
-            <li>
-                <button type="submit">Edit Profile</button>
-            </li>
-        </form>
-    </ul>
+    {% if user_profile.my_profile %}
+        <h1>My Profile</h1>
+        <ul>
+            <form method="get" action="/edit_profile">
+                {% csrf_token %}
+                <li>
+                    <button type="submit">Edit Profile</button>
+                </li>
+            </form>
+        </ul>
+    {% else %}
+        <h1>User Profile</h1>
+    {% endif %}
     <p>Username: {{ user_profile.username }}</p>
     <p>First Name: {{ user_profile.first_name }}</p>
     <p>Last Name: {{ user_profile.last_name }}</p>
@@ -81,13 +85,14 @@
     <div>
         {% if user_profile.profile_picture %}
             <img src="{{ MEDIA_URL }}{{ user_profile.profile_picture }}" alt="Profile Picture" class="profile-picture">
+            <hr>
         {% else %}
             <p>No profile picture available</p>
         {% endif %}
     </div>
     <div class="actions">
-         <a href="/home" class="home-button">Home</a>
-        <a href="/logout_user">Logout</a>
+        <a href="javascript:history.go(1)">Back</a>
+        <a href="/home" class="home-button">Home</a>
     </div>
 </body>
 </html>

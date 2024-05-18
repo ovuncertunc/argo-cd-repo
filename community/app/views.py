@@ -41,6 +41,10 @@ def register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
+
+            username = form.cleaned_data["username"]
+            new_user = UserProfile(username=username)
+            new_user.save()
             return redirect("login_user")
         else:
             return render(request, 'authenticate/register.html',
@@ -56,10 +60,22 @@ def home(request=None):
         post_author = post.author_username
         user_profile = UserProfile.objects.get(username=post_author)
         post.author_profile_picture = user_profile.profile_picture
-        post.template_dict = ast.literal_eval(post.template_dict)
+
+        post.title = None
+        if post.template_name == "Default Template":
+            template_dict = ast.literal_eval(post.template_dict)
+            post.title = template_dict["Title"]
 
     all_communities = Community.objects.exclude(name__in=joined_communities)
+
     return render(request, 'home.html',  {'communities': all_communities, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
+
+def search_communities(request):
+    query = request.GET.get('query', '')
+    communities = Community.objects.filter(name__icontains=query)
+
+    return render(request, 'search_community.html', {'communities': communities, 'query': query, "MEDIA_URL": settings.MEDIA_URL})
+
 
 def my_communities(request):
     username = request.user.username
@@ -97,6 +113,7 @@ def community_home(request):
     username = request.user.username
     community_name = request.GET["community_name"]
     community_membership = UserCommunityMembership.objects.filter(username=username, community=community_name)
+    joined_user_list = UserCommunityMembership.objects.filter(community=community_name).values_list('username', flat=True)
 
     is_joined = len(community_membership) == 1
     community = Community.objects.get(name=community_name)
@@ -111,12 +128,16 @@ def community_home(request):
             post_author = post.author_username
             user_profile = UserProfile.objects.get(username=post_author)
             post.author_profile_picture = user_profile.profile_picture
-            post.template_dict = ast.literal_eval(post.template_dict)
+
+            post.title = None
+            if post.template_name == "Default Template":
+                template_dict = ast.literal_eval(post.template_dict)
+                post.title = template_dict["Title"]
 
     else:
         posts = []
 
-    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined})
+    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined, "joined_user_list": joined_user_list})
 
 
 def join_community(request):
@@ -129,6 +150,7 @@ def join_community(request):
         new_community_membership = UserCommunityMembership(username=username, community=community_name)
         new_community_membership.save()
 
+    joined_user_list = UserCommunityMembership.objects.filter(community=community_name).values_list('username', flat=True)
     # Displaying posts at the community home page
     posts = Posts.objects.filter(community_name=community_name)
 
@@ -136,7 +158,7 @@ def join_community(request):
     community_photo = community.community_photo
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True})
+    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True, "joined_user_list": joined_user_list})
 
 
 def create_post(request):
@@ -170,6 +192,25 @@ def create_post(request):
             return community_home(request)
 
     return render(request, 'create_post.html', {'community_name': community_name, "templates": templates, "select_dropdown_list": True})
+
+
+def display_post(request):
+    post_id = request.GET["post_id"]
+    post = Posts.objects.get(id=post_id)
+
+    post_author = post.author_username
+    user_profile = UserProfile.objects.get(username=post_author)
+    post.author_profile_picture = user_profile.profile_picture
+
+    template_dict_json = ast.literal_eval(post.template_dict)
+    post.template_dict = template_dict_json
+
+    post.title = None
+    if post.template_name == "Default Template":
+        post.title = template_dict_json["Title"]
+
+
+    return render(request, 'display_post.html', {"post": post})
 
 
 def display_community_specific_template_post(request):
@@ -206,14 +247,14 @@ def edit_profile(request):
                 if profile_picture:
                     user.profile_picture.save(profile_picture.name, profile_picture)
                 user.save()
-                return render(request, "my_profile.html", {"user_profile": user, "MEDIA_URL": settings.MEDIA_URL})
+                return render(request, "user_profile.html", {"user_profile": user, "MEDIA_URL": settings.MEDIA_URL, "my_profile": True})
             else:
                 user_profile = UserProfile(username=username, first_name=first_name, last_name=last_name, birthdate=birthdate, about_me=about_me)
                 if profile_picture:
                     user_profile.profile_picture.save(profile_picture.name, profile_picture)
                 user_profile.save()
 
-                return render(request, "my_profile.html", {"user_profile": user_profile,"MEDIA_URL": settings.MEDIA_URL})
+                return render(request, "user_profile.html", {"user_profile": user_profile,"MEDIA_URL": settings.MEDIA_URL, "my_profile": True})
     else:
         username = request.user.username
         existing_user = UserProfile.objects.filter(username=username).exists()
@@ -227,11 +268,17 @@ def edit_profile(request):
             profile_picture = None
     return render(request, "edit_profile.html", {"form": form, "profile_picture": profile_picture})
 
-def my_profile(request):
-    username = request.user.username
+def display_user_profile(request):
+    my_profile = bool(request.GET["my_profile"])
+
+    if my_profile:
+        username = request.user.username
+    else:
+        username = request.GET["username"]
+
     if UserProfile.objects.filter(username=username).exists():
         user_profile = UserProfile.objects.get(username=username)
-        return render(request, "my_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL})
+        return render(request, "user_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL, "my_profile": my_profile})
     else:
         return edit_profile(request)
 

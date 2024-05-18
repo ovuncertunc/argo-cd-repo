@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: calc(50% - 20px);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 10px auto;
+        }
+        .actions {
+            text-align: center;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        p {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .profile-picture {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: relative;
+            object-fit: cover;
+        }
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .author-details {
+            flex-grow: 1;
+        }
+        .post-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .created-at {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .home-button {
+            position: relative;
+            right: -500px
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form method="get" action="/home">
+            {% csrf_token %}
+            <button class="home-button" type="submit">Home</button>
+        </form>
+        <hr>
+        <div class="post-content">
+            {% if post.title %}
+                <h2> {{ post.title }} by {{ post.author_username }} </h2>
+            {% else %}
+                <h2> {{ post.template_name }} by {{ post.author_username }} </h2>
+            {% endif %}
+        </div>
+        <div class="author-info">
+            {% if post.author_profile_picture %}
+                <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+            {% endif %}
+            <div class="author-details">
+                <a href="/user_profile?my_profile=False,username={{  post.author_username }}">Author: {{ post.author_username }}</a>
+            </div>
+        </div>
+        <div class="post-content">
+            {% for key, value in post.template_dict.items %}
+                <p>{{ key }}: {{ value }}</p>
+            {% endfor %}
+        </div>
+        <div class="created-at">
+            <p>Created at: {{ post.created_at }}</p>
+        </div>
+
+        <form method="get" action="/community_home">
+            {% csrf_token %}
+            <input type="hidden" name="community_name" value="{{ community_name }}">
+            <button class="actions"  type="submit">{{ post.community_name }}</button>
+        </form>
+
+    </div>
+</body>
+</html>
