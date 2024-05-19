@@ -9,6 +9,8 @@ from datetime import datetime
 from django.conf import settings
 import json
 from django.db.models import Q
+from functools import reduce
+import operator
 from django.http import HttpResponse
 
 def login_required(view_func):
@@ -92,6 +94,65 @@ def search_posts(request):
     }
     return render(request, 'search_posts.html', context)
 
+def advanced_search_post(request):
+    community_name = request.GET["community_name"]
+    if request.method == "POST":
+        template_name = request.POST["template_name"]
+        if template_name == "Default Template":
+            template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
+        else:
+            template_dict_str = CommunitySpecificTemplate.objects.get(template_name=template_name).template_dict
+            template_dict = json.loads(template_dict_str.replace("'", "\""))
+
+        to_be_searched = {}
+        for key, value in template_dict.items():
+            value = request.POST[key]
+            if value != "":
+                to_be_searched[key] = value
+
+        search_results = Posts.objects.filter(community_name=community_name, template_name=template_name, template_dict__contains=to_be_searched)
+
+
+        return render(request, 'search_posts.html', {'search_results': search_results})
+    else:
+        template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
+        return render(request, 'advanced_search_post.html', {"community_name": community_name, "template_list": template_list, "select_dropdown_list": True})
+
+def get_template_dict(request):
+    template_name = request.POST["selected_template"]
+    community_name = request.POST["community_name"]
+
+    if template_name == "Default Template":
+        template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
+    else:
+        template = CommunitySpecificTemplate.objects.get(template_name=template_name)
+        template_dict = json.loads(template.template_dict.replace("'", "\""))
+
+    return render(request, "advanced_search_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
+
+
+
+
+
+def display_advanced_search_post(request):
+
+    community_name = request.GET["community_name"]
+
+    community = Community.objects.get(name=community_name)
+
+    posts = Posts.objects.filter(community_name=community_name)
+
+    for post in posts:
+        post_author = post.author_username
+        user_profile = UserProfile.objects.get(username=post_author)
+        post.author_profile_picture = user_profile.profile_picture
+
+        post.title = None
+        if post.template_name == "Default Template":
+            post.title = post.template_dict["Title"]
+
+
+    return render(request, 'display_advanced_search_post.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
 def my_communities(request):
     username = request.user.username
     joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
@@ -117,7 +178,7 @@ def create_community(request):
             new_community_membership = UserCommunityMembership(username=request.user.username, community=community_name)
             new_community_membership.save()
 
-            return render(request, 'community_home.html', {'community': new_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": [owner.username]})
+            return render(request, 'community_home.html', {'community': new_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": [owner.username], "template_list": []})
     else:
         form = CommunityCreationForm()
 
@@ -128,6 +189,7 @@ def community_home(request):
     username = request.user.username
     community_name = request.GET["community_name"]
     community_membership = UserCommunityMembership.objects.filter(username=username, community=community_name)
+    template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
     joined_user_list = UserCommunityMembership.objects.filter(community=community_name).values_list('username', flat=True)
 
     is_joined = len(community_membership) == 1
@@ -151,7 +213,7 @@ def community_home(request):
     else:
         posts = []
 
-    return render(request, 'community_home.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "posts": posts, "is_joined": is_joined, "joined_user_list": joined_user_list})
+    return render(request, 'community_home.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "posts": posts, "is_joined": is_joined, "joined_user_list": joined_user_list, "template_list": template_list})
 
 
 def join_community(request):
@@ -165,6 +227,8 @@ def join_community(request):
         new_community_membership.save()
 
     joined_user_list = UserCommunityMembership.objects.filter(community=community_name).values_list('username', flat=True)
+    template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
+
     # Displaying posts at the community home page
     posts = Posts.objects.filter(community_name=community_name)
 
@@ -172,7 +236,7 @@ def join_community(request):
     community_photo = community.community_photo
     description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True, "joined_user_list": joined_user_list})
+    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True, "joined_user_list": joined_user_list, "template_list": template_list})
 
 
 def create_post(request):
@@ -197,9 +261,11 @@ def create_post(request):
             new_post.save()
 
             return community_home(request)
-            #return render(request, 'community_home.html', {'community_name': community_name, "is_owner": True})
         else:
-            post_content_json = request.POST["form_data"]
+
+            post_content_str = request.POST["form_data"]
+            post_content_json = json.loads(post_content_str.replace("'", "\""))
+
             new_post = Posts(template_name=template_name, template_dict=post_content_json, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
 
@@ -251,8 +317,10 @@ def edit_community(request):
             form.save()
 
         joined_user_list = UserCommunityMembership.objects.filter(community=community).values_list('username', flat=True)
+        template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list(
+            'template_name', flat=True)
 
-        return render(request, 'community_home.html', {'community': existing_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": joined_user_list})
+        return render(request, 'community_home.html', {'community': existing_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": joined_user_list, "template_list": template_list})
 
     else:
         form = CommunityCreationForm(instance=community)

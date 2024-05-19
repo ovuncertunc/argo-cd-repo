@@ -21,4 +21,6 @@ urlpatterns = [
     path('display_post/', login_required(views.display_post), name='display_post'),
     path('search_posts/', login_required(views.search_posts), name='search_posts'),
     path('edit_community/', login_required(views.edit_community), name='edit_community'),
+    path('advanced_search_post', login_required(views.advanced_search_post), name='advanced_search_post'),
+    path('get_template_dict', login_required(views.get_template_dict), name='get_template_dict'),
 ]

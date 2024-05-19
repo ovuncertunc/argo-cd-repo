@@ -233,6 +233,14 @@
                 <button type="submit">Basic Search</button>
             </form>
         </div>
+
+        <div class="advanced-search-bar">
+            <form method="get" action="/advanced_search_post">
+                <input type="hidden" name="community_name" value="{{ community.name }}">
+                <button type="submit">Advanced Search</button>
+            </form>
+        </div>
+
         <ul>
             {% for post in posts %}
                 <li class="post" onclick="window.location.href='/display_post?post_id={{ post.id }}'">
