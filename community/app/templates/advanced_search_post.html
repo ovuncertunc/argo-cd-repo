@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Search Post</title>
+    <style>
+        .required-label::before {
+            content: "*";
+            color: red;
+            display: inline-block;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        label {
+            vertical-align: middle;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        function submitForm() {
+            var selectedTemplate = document.getElementById("template_selector").value;
+            document.getElementById("selected_template").value = selectedTemplate;
+            document.getElementById("template_form").submit();
+        }
+
+        function postSubmitForm() {
+        // Create an empty dictionary to store field names and values
+        var formData = {};
+
+        // Iterate over input fields and collect their values
+        var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="geolocation"], .text-box-pair input[type="date"]');
+        inputs.forEach(function(input) {
+            formData[input.name] = input.value;
+        });
+
+        // Convert the dictionary to a JSON string
+        var formDataJSON = JSON.stringify(formData);
+
+        // Create a hidden input field to hold the JSON data
+        var dataField = document.createElement('input');
+        dataField.setAttribute('type', 'hidden');
+        dataField.setAttribute('name', 'form_data');
+        dataField.setAttribute('value', formDataJSON);
+
+        // Append the hidden input field to the form
+        document.getElementById('post_form').appendChild(dataField);
+
+        // Submit the form
+        document.getElementById('post_form').submit();
+    }
+    </script>
+</head>
+<body>
+    <h2>Advanced Search for {{ community_name }}</h2>
+    {% if select_dropdown_list %}
+    <label for="template_selector">Select Template:</label>
+    <select id="template_selector" onchange="submitForm()">
+        <option value="empty">-Please Select Template-</option>
+        <option value="Default Template">Default Template</option>
+        {% for template in template_list %}
+            <option value="{{template}}">{{template}}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Hidden form to send the POST request -->
+    <form id="template_form" method="post" action="/get_template_dict" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" id="selected_template" name="selected_template">
+        <input type="hidden" name="community_name" value="{{ community_name }}">
+    </form>
+
+    {% else %}
+    <div class="container">
+        <form id="advanced-search-container" method="post" action="/advanced_search_post?community_name={{ community_name }}&template_name={{ template_name }}">
+            {% csrf_token %}
+            <input type="hidden" name="template_name" value="{{ template_name }}">
+            {% for field_name, field_type in template_dict.items %}
+                <div class="text-box-pair">
+                    {% if field_type == "text" or field_type == "geolocation" %}
+                        <div>
+                            <label>{{ field_name }}:</label>
+                            <input type="{{ field_type }}" name="{{ field_name }}" class="form-control">
+                        </div>
+                    {% elif field_type == "date" %}
+                    <label>{{ field_name }}:</label>
+                    <input type="{{ field_type }}" name="{{ field_name }}" />
+                    {% else %}
+                    <p> Do nothing</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <br><br>
+            <button type="submit" id="submit_button" onclick="postSubmitForm()">Search Post</button>
+            <button type="button" id="cancel_button" onclick="window.location.href='/community_home?community_name={{ community_name }}'" style="margin-left: 10px;">Cancel</button>
+        </form>
+    </div>
+    {% endif %}
+</body>
+</html>

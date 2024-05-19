@@ -82,17 +82,9 @@
     </style>
 </head>
 <body>
+    {% load custom_filters %}
     <h2>Search Results</h2>
     <div class="container">
-        <div class="search-bar">
-            <form method="get" action="/search_posts">
-                <input type="text" name="query" placeholder="Search posts..." value="{{ query }}">
-                <button type="submit">Search</button>
-            </form>
-        </div>
-
-        <h3>Results for "{{ query }}"</h3>
-        <hr>
         <ul>
             {% if search_results %}
                 {% for post in search_results %}
@@ -103,11 +95,14 @@
                             {% endif %}
 
                             <div class="author-details">
-                                {% if post.title %}
-                                    <h3>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h3>
+                                {% if post.template_name == "Default Template" %}
+                                    <h3>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot;</h3>
                                 {% else %}
                                     <h3>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot;</h3>
                                 {% endif %}
+                                {% for field in display_fields %}
+                                    <p>{{ field }}: {{ post.template_dict|get_item:field }}</p>
+                                {% endfor %}
                                 <div class="created-at">
                                     <p>Created at: {{ post.created_at }}</p>
                                 </div>
@@ -118,7 +113,7 @@
                     <hr>
                 {% endfor %}
             {% else %}
-                <p>No posts found for "{{ query }}".</p>
+                <p>No posts found for the specific search".</p>
             {% endif %}
         </ul>
     </div>

@@ -13,6 +13,7 @@ from functools import reduce
 import operator
 from django.http import HttpResponse
 
+
 def login_required(view_func):
     def wrapper(request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -80,19 +81,19 @@ def search_communities(request):
     return render(request, 'search_community.html', {'communities': communities, 'query': query, "MEDIA_URL": settings.MEDIA_URL})
 
 def search_posts(request):
+    community_name = request.GET["community_name"]
+
     query = request.GET.get('query', '')
     search_results = []
 
+    posts = Posts.objects.filter(community_name=community_name)
+
     if query:
-        search_results = Posts.objects.filter(
+        search_results = posts.filter(
             Q(template_dict__icontains=query) | Q(template_name__icontains=query)
         )
 
-    context = {
-        'query': query,
-        'search_results': search_results
-    }
-    return render(request, 'search_posts.html', context)
+    return render(request, 'search_posts.html', {'search_results': search_results})
 
 def advanced_search_post(request):
     community_name = request.GET["community_name"]
@@ -110,10 +111,27 @@ def advanced_search_post(request):
             if value != "":
                 to_be_searched[key] = value
 
-        search_results = Posts.objects.filter(community_name=community_name, template_name=template_name, template_dict__contains=to_be_searched)
+        display_fields = list(to_be_searched.keys())
 
+        posts = Posts.objects.filter(community_name=community_name, template_name=template_name)
 
-        return render(request, 'search_posts.html', {'search_results': search_results})
+        if len(to_be_searched) != 0:
+            search_results = []
+            # Build a list of Q objects for the keys to be searched
+            query_conditions = []
+            for key, value in to_be_searched.items():
+                query_conditions.append(Q(**{f'template_dict__{key}__icontains': value}))
+
+            # Combine all Q objects with the & operator
+            if query_conditions:
+                combined_query = reduce(operator.and_, query_conditions)
+                search_results = posts.filter(combined_query)
+
+        else:
+            search_results = posts
+            display_fields = list(posts.template_dict.keys())
+
+        return render(request, 'search_posts.html', {'search_results': search_results, "display_fields": display_fields})
     else:
         template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
         return render(request, 'advanced_search_post.html', {"community_name": community_name, "template_list": template_list, "select_dropdown_list": True})
@@ -129,10 +147,6 @@ def get_template_dict(request):
         template_dict = json.loads(template.template_dict.replace("'", "\""))
 
     return render(request, "advanced_search_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
-
-
-
-
 
 def display_advanced_search_post(request):
 
@@ -285,9 +299,6 @@ def display_post(request):
     post.title = None
     if post.template_name == "Default Template":
         post.title = post.template_dict["Title"]
-    else:
-        temp = post.template_dict.replace("'", "\"")
-        post.template_dict = json.loads(temp)
 
     return render(request, 'display_post.html', {"post": post})
 
