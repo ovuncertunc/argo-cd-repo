@@ -12,6 +12,7 @@ from django.db.models import Q
 from functools import reduce
 import operator
 from django.http import HttpResponse
+from django.contrib import messages
 
 
 def login_required(view_func):
@@ -93,7 +94,7 @@ def search_posts(request):
             Q(template_dict__icontains=query) | Q(template_name__icontains=query)
         )
 
-    return render(request, 'search_posts.html', {'search_results': search_results})
+    return render(request, 'search_posts.html', {'search_results': search_results, "community_name": community_name})
 
 def advanced_search_post(request):
     community_name = request.GET["community_name"]
@@ -128,10 +129,11 @@ def advanced_search_post(request):
                 search_results = posts.filter(combined_query)
 
         else:
+            if len(posts) > 0:
+                display_fields = list(posts[0].template_dict.keys())
             search_results = posts
-            display_fields = list(posts.template_dict.keys())
 
-        return render(request, 'search_posts.html', {'search_results': search_results, "display_fields": display_fields})
+        return render(request, 'search_posts.html', {'search_results': search_results, "display_fields": display_fields, "community_name": community_name})
     else:
         template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list('template_name', flat=True)
         return render(request, 'advanced_search_post.html', {"community_name": community_name, "template_list": template_list, "select_dropdown_list": True})
@@ -139,6 +141,7 @@ def advanced_search_post(request):
 def get_template_dict(request):
     template_name = request.POST["selected_template"]
     community_name = request.POST["community_name"]
+    calling_from = request.POST["calling_from"]
 
     if template_name == "Default Template":
         template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
@@ -146,7 +149,12 @@ def get_template_dict(request):
         template = CommunitySpecificTemplate.objects.get(template_name=template_name)
         template_dict = json.loads(template.template_dict.replace("'", "\""))
 
-    return render(request, "advanced_search_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
+    if calling_from == "advanced_search_post":
+        return render(request, "advanced_search_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
+    elif calling_from == "create_post":
+        return render(request, "create_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
+    else:
+        return HttpResponse("There is something wrong!")
 
 def display_advanced_search_post(request):
 
@@ -296,24 +304,18 @@ def display_post(request):
     user_profile = UserProfile.objects.get(username=post_author)
     post.author_profile_picture = user_profile.profile_picture
 
+    if post.template_name == "Default Template":
+        template_field_value_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
+
+    else:
+        template_dict_str = CommunitySpecificTemplate.objects.get(template_name=post.template_name).template_dict
+        template_field_value_dict = json.loads(template_dict_str.replace("'", "\""))
+
     post.title = None
     if post.template_name == "Default Template":
         post.title = post.template_dict["Title"]
 
-    return render(request, 'display_post.html', {"post": post})
-
-
-def display_community_specific_template_post(request):
-    template_name = request.POST["selected_template"]
-    community_name = request.POST["community_name"]
-
-    if template_name == "Default Template":
-        template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
-    else:
-        template = CommunitySpecificTemplate.objects.get(template_name=template_name)
-        template_dict = json.loads(template.template_dict.replace("'", "\""))
-
-    return render(request, "create_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
+    return render(request, 'display_post.html', {"post": post, "template_field_value_dict": template_field_value_dict})
 
 def edit_community(request):
     community_name = request.GET["community_name"]
@@ -403,14 +405,30 @@ def display_user_profile(request):
 def create_template(request):
     if request.method == 'POST':
         template_dict_json = request.POST.get("template_dict")
-        template_dict = json.loads(template_dict_json)
+        template_dict = json.loads(template_dict_json.replace("'", "\""))
         template_name = request.POST.get("template_name")
         community_name = request.POST["community_name"]
 
+        if not template_name or template_name[0] == " ":
+            messages.error(request, "Template name cannot start with space.")
+            return redirect(reverse("create_template") + f"?community_name={community_name}")
+
+        if len(template_dict) == 0:
+            # Add an error message to be displayed on the community home page
+            messages.error(request, "Template cannot be empty. Please add at least one field.")
+            return redirect(reverse("create_template") + f"?community_name={community_name}")
+
+        # Remove empty keys from template_dict
+        keys_to_remove = [key for key in template_dict if key == ""]
+        for key in keys_to_remove:
+            template_dict.pop(key)
+
         new_template = CommunitySpecificTemplate(community_name=community_name, template_name=template_name, template_dict=template_dict)
         new_template.save()
-
         return redirect(reverse("community_home") + f"?community_name={community_name}")
+
+
+
     else:
         community_name = request.GET["community_name"]
         form = CommunitySpecificTemplateForm()

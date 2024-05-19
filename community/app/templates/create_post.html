@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
     <title>Create Post</title>
     <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
         .required-label::before {
             content: "*";
             color: red;
@@ -28,30 +35,61 @@
         }
 
         function postSubmitForm() {
-        // Create an empty dictionary to store field names and values
-        var formData = {};
+            // Create an empty dictionary to store field names and values
+            var formData = {};
 
-        // Iterate over input fields and collect their values
-        var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="geolocation"], .text-box-pair input[type="date"]');
-        inputs.forEach(function(input) {
-            formData[input.name] = input.value;
+            // Iterate over input fields and collect their values
+            var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="date"]');
+            inputs.forEach(function(input) {
+                formData[input.name] = input.value;
+            });
+
+            // Explicitly add geolocation value
+            var geolocation = document.getElementById('geolocation')
+            if (geolocation.value) {
+                console.log(geolocation.name)
+                console.log(geolocation.value)
+                formData[geolocation.name] = geolocation.value;
+            }
+
+            // Convert the dictionary to a JSON string
+            var formDataJSON = JSON.stringify(formData);
+
+            // Create a hidden input field to hold the JSON data
+            var dataField = document.createElement('input');
+            dataField.setAttribute('type', 'hidden');
+            dataField.setAttribute('name', 'form_data');
+            dataField.setAttribute('value', formDataJSON);
+
+            // Append the hidden input field to the form
+            document.getElementById('post_form').appendChild(dataField);
+
+            // Submit the form
+            document.getElementById('post_form').submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map').setView([51.505, -0.09], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+
+            var marker;
+
+            function onMapClick(e) {
+                if (marker) {
+                    marker.setLatLng(e.latlng);
+                } else {
+                    marker = L.marker(e.latlng).addTo(map);
+                }
+                document.getElementById('latitude').value = e.latlng.lat;
+                document.getElementById('longitude').value = e.latlng.lng;
+                document.getElementById('geolocation').value = e.latlng.lat + ',' + e.latlng.lng;
+            }
+
+            map.on('click', onMapClick);
         });
-
-        // Convert the dictionary to a JSON string
-        var formDataJSON = JSON.stringify(formData);
-
-        // Create a hidden input field to hold the JSON data
-        var dataField = document.createElement('input');
-        dataField.setAttribute('type', 'hidden');
-        dataField.setAttribute('name', 'form_data');
-        dataField.setAttribute('value', formDataJSON);
-
-        // Append the hidden input field to the form
-        document.getElementById('post_form').appendChild(dataField);
-
-        // Submit the form
-        document.getElementById('post_form').submit();
-    }
     </script>
 </head>
 <body>
@@ -67,10 +105,11 @@
     </select>
 
     <!-- Hidden form to send the POST request -->
-    <form id="template_form" method="post" action="/display_community_specific_template_post" style="display: none;">
+    <form id="template_form" method="post" action="/get_template_dict" style="display: none;">
         {% csrf_token %}
         <input type="hidden" id="selected_template" name="selected_template">
         <input type="hidden" name="community_name" value="{{ community_name }}">
+        <input type="hidden" name="calling_from" value="create_post">
     </form>
 
     {% else %}
@@ -80,18 +119,30 @@
             <input type="hidden" name="template_name" value="{{ template_name }}">
             {% for field_name, field_type in template_dict.items %}
                 <div class="text-box-pair">
-                    {% if field_type == "text" or field_type == "geolocation" %}
+
+                    {% if field_type == "text" %}
                         <div>
                             <label>{{ field_name }}:</label>
                             <input type="{{ field_type }}" name="{{ field_name }}" class="form-control">
                         </div>
+
                     {% elif field_type == "audio/mpeg" or field_type == "audio/ogg" or field_type == "video/mp4" or field_type == "video/ogg" or field_type == "photo" %}
                         --- upload screen ---
+
                     {% elif field_type == "date" %}
-                    <label>{{ field_name }}:</label>
-                    <input type="{{ field_type }}" name="{{ field_name }}" value="2024-01-01" />
+                        <label>{{ field_name }}:</label>
+                        <input type="{{ field_type }}" name="{{ field_name }}" value="2024-01-01" />
+
+                    {% elif field_type == "geolocation" %}
+                        <h3>{{ field_name }}</h3>
+                        <div id="map"></div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <input type="hidden" id="geolocation" name="{{ field_name }}">
+                        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
                     {% else %}
-                    <p> Do nothing</p>
+                        <p> Do nothing</p>
                     {% endif %}
                 </div>
             {% endfor %}

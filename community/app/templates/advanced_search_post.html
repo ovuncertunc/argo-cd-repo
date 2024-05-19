@@ -71,6 +71,7 @@
         {% csrf_token %}
         <input type="hidden" id="selected_template" name="selected_template">
         <input type="hidden" name="community_name" value="{{ community_name }}">
+        <input type="hidden" name="calling_from" value="advanced_search_post">
     </form>
 
     {% else %}

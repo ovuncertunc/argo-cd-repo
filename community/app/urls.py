@@ -16,7 +16,6 @@ urlpatterns = [
     path('edit_profile', login_required(views.edit_profile), name='edit_profile'),
     path('user_profile', login_required(views.display_user_profile), name='user_profile'),
     path('create_template', login_required(views.create_template), name='create_template'),
-    path('display_community_specific_template_post', login_required(views.display_community_specific_template_post), name='display_community_specific_template_post'),
     path('search_communities/', login_required(views.search_communities), name='search_communities'),
     path('display_post/', login_required(views.display_post), name='display_post'),
     path('search_posts/', login_required(views.search_posts), name='search_posts'),

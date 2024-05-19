@@ -108,13 +108,13 @@
                                 </div>
                             </div>
                         </div>
-                        <a href="/community_home?community_name={{ post.community_name }}">{{ post.community_name }}</a>
                     </li>
                     <hr>
                 {% endfor %}
             {% else %}
-                <p>No posts found for the specific search".</p>
+                <p>No posts found for the specific search.</p>
             {% endif %}
+            <a href="/community_home?community_name={{ community_name }}">{{ community_name }}</a>
         </ul>
     </div>
 </body>

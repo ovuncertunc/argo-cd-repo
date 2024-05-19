@@ -94,11 +94,18 @@
         }
         .home-button {
             position: relative;
-            right: -500px
+            right: -500px;
+        }
+        #map {
+            height: 400px;  /* Adjust the height as needed */
+            width: 100%;
+            margin-top: 20px;
         }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
+    {% load custom_filters %}
     <div class="container">
         <div class="top-bar">
             <button onclick="location.href='/community_home?community_name={{ post.community_name }}'">{{ post.community_name }}</button>
@@ -106,9 +113,9 @@
         </div>
         <div class="post-content">
             {% if post.title %}
-                <h2> {{ post.title }} by {{ post.author_username }} </h2>
+                <h2>{{ post.title }} by {{ post.author_username }}</h2>
             {% else %}
-                <h2> {{ post.template_name }} by {{ post.author_username }} </h2>
+                <h2>{{ post.template_name }} by {{ post.author_username }}</h2>
             {% endif %}
         </div>
         <hr>
@@ -117,18 +124,49 @@
                 <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
             {% endif %}
             <div class="author-details">
-                <a href="/user_profile?username={{  post.author_username }}">Author: {{ post.author_username }}</a>
+                <a href="/user_profile?username={{ post.author_username }}">Author: {{ post.author_username }}</a>
             </div>
         </div>
         <div class="post-content">
             {% for key, value in post.template_dict.items %}
-                <p>{{ key }}: {{ value }}</p>
+                {% if template_field_value_dict|get_item:key == "geolocation" %}
+                    <p>{{ key }}: <i> Look at the blue pin on the map! </i></p>
+                    <div id="map" data-lat-lng="{{ value }}"></div>
+                {% else %}
+                    <p>{{ key }}: {{ value }}</p>
+                {% endif %}
             {% endfor %}
         </div>
         <div class="created-at">
             <p>Created at: {{ post.created_at }}</p>
         </div>
-
     </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var mapElement = document.getElementById('map');
+            if (mapElement) {
+                // Get the latitude and longitude from the data attribute
+                var latLng = mapElement.getAttribute('data-lat-lng').split(',');
+                var lat = parseFloat(latLng[0]);
+                var lng = parseFloat(latLng[1]);
+
+                // Initialize the map
+                var map = L.map('map').setView([lat, lng], 13);
+
+                // Add the tile layer to the map
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                }).addTo(map);
+
+                // Add a marker to the map
+                var marker = L.marker([lat, lng]).addTo(map);
+
+                // Fix map size issues
+                map.invalidateSize();
+            }
+        });
+    </script>
 </body>
 </html>

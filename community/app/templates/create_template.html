@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html>
+<style>
+    .messages .error {
+    color: red;
+    font-weight: bold;
+}
+</style>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script>
@@ -11,11 +17,11 @@
                                         '<div><label>Field Type:</label><select name="field_type" class="form-control">' +
                                             '<option value="text">text</option>' +
                                             '<option value="date">date</option>' +
-                                            '<option value="audio/mpeg">Audio/MPEG</option>' +
-                                            '<option value="audio/ogg">Audio/OGG</option>' +
-                                            '<option value="photo">Photo</option>' +
-                                            '<option value="geolocation">Geolocation</option>' +
-                                            '<option value="video/ogg">Video/OGG</option>' +
+                                            '<option value="audio/mpeg">audio/MPEG</option>' +
+                                            '<option value="audio/ogg">audio/OGG</option>' +
+                                            '<option value="photo">photo</option>' +
+                                            '<option value="geolocation">geolocation</option>' +
+                                            '<option value="video/ogg">video/OGG</option>' +
                                         '</select></div>' +
                                     '</div>');
                 $('.text-boxes').append(textBoxPair);
@@ -34,12 +40,14 @@
 
                 // Loop through each text-box pair
                 $('.text-box-pair').each(function(index) {
-                    // Get the field name and data type entered by the user
-                    var fieldName = $(this).find('input[name="field_name"]').val();
-                    var fieldType = $(this).find('select[name="field_type"]').val();
+                    var fieldNameInput = $(this).find('input[name="field_name"]');
+                     if (fieldNameInput.val() != "") {
+                        var fieldName = fieldNameInput.val();
+                        var fieldType = $(this).find('select[name="field_type"]').val();
 
-                    // Add the field name and data type to the template object
-                    template[fieldName] = fieldType;
+                        // Add the field name and data type to the template object
+                        template[fieldName] = fieldType;
+                    }
                 });
 
                 // Convert the template object to a JSON string
@@ -121,7 +129,15 @@
         {% csrf_token %}
         {{ form.name.label_tag }}
         {{ form.name }}
+
         <div class="container">
+            {% if messages %}
+              <ul class="messages">
+                {% for message in messages %}
+                  <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
             <div class="template-name-container">
                 <label class="template_name" for="template_name">Template Name:</label>
                 {{ form.template_name }}
@@ -132,13 +148,13 @@
                     <div><label>Field Name:</label><input type="text" name="field_name" class="form-control"></div>
                     <div><label>Field Type:</label>
                         <select name="field_type" class="form-control">
-                            <option value="text">Text</option>
-                            <option value="date">Date</option>
-                            <option value="audio/mpeg">Audio/MPEG</option>
-                            <option value="audio/ogg">Audio/OGG</option>
-                            <option value="video/ogg">Video/OGG</option>
-                            <option value="Photo">Photo</option>
-                            <option value="Geolocation">Geolocation</option>
+                            <option value="text">text</option>
+                            <option value="date">date</option>
+                            <option value="audio/mpeg">audio/MPEG</option>
+                            <option value="audio/ogg">audio/OGG</option>
+                            <option value="video/ogg">video/OGG</option>
+                            <option value="photo">photo</option>
+                            <option value="geolocation">geolocation</option>
                         </select>
                     </div>
                 </div>
