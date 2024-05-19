@@ -19,10 +19,15 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin: 10px auto;
         }
-        h2, h3 {
+        h2 {
             text-align: center;
             margin-top: 0.5em;
             margin-bottom: 0.5em;
+        }
+        h3 {
+            color: #333;
+            display: flex;
+            align-items: flex-start;
         }
         ul {
             list-style-type: none;
@@ -77,12 +82,11 @@
             margin-right: 10px;
         }
         .profile-picture {
-            width: 70px;
-            height: 70px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            position: relative;
             object-fit: cover;
-            margin-right: 20px;
+            margin-right: 10px;
         }
         .author-info {
             display: flex;
@@ -91,7 +95,8 @@
         }
         .author-details {
             flex-grow: 1;
-            margin-left: 5px
+            font-size: 14px;
+            color: #333;
         }
         .post-content {
             display: flex;
@@ -138,15 +143,14 @@
     </style>
 </head>
 <body>
-    <h2>Welcome to Community Builder Application</h2>
     <div class="container">
         <div class="top-bar">
-            <button onclick="location.href='/user_profile?my_profile=True'">My Profile</button>
+            <button onclick="location.href='/user_profile?username={{ user.username }}'">My Profile</button>
             <button onclick="location.href='/my_communities'">My Communities</button>
             <button onclick="location.href='/create_community'">Create Community</button>
             <button onclick="location.href='/logout_user'">Logout</button>
         </div>
-
+        <h2>Welcome to Community Builder Application</h2>
         <div class="search-container">
             <form method="get" action="/search_communities">
                 <input type="text" name="query" placeholder="Search for communities...">
@@ -156,10 +160,11 @@
 
         <ul>
             {% if posts|length != 0 %}
-                <h3>Recent Posts</h3>
+                <h3>Recent Posts of the communities that I follow</h3>
                 <hr>
             {% endif %}
             {% for post in posts %}
+                <a href="/community_home?community_name={{ post.community_name }}">{{ post.community_name }}</a>
                 <li class="post" onclick="window.location.href='/display_post?post_id={{ post.id }}'">
 
                     <div class="author-info">
@@ -169,16 +174,15 @@
 
                         <div class="author-details">
                             {% if post.title %}
-                                <h3>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h3>
+                                <h4>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h4>
                             {% else %}
-                                <h3>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot; </h3>
+                                <h4>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot; </h4>
                             {% endif %}
-                            <div class="created-at">
-                                <p>Created at: {{ post.created_at }}</p>
-                            </div>
                         </div>
                     </div>
-                    <a href="/community_home?community_name={{ post.community_name }}">{{ post.community_name }}</a>
+                    <div class="created-at">
+                        <p>Created at: {{ post.created_at }}</p>
+                    </div>
                 </li>
             <hr>
             {% endfor %}

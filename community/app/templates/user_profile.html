@@ -64,7 +64,7 @@
     </style>
 </head>
 <body>
-    {% if user_profile.my_profile %}
+    {% if my_profile %}
         <h1>My Profile</h1>
         <ul>
             <form method="get" action="/edit_profile">
@@ -91,7 +91,6 @@
         {% endif %}
     </div>
     <div class="actions">
-        <a href="javascript:history.go(1)">Back</a>
         <a href="/home" class="home-button">Home</a>
     </div>
 </body>

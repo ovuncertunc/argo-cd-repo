@@ -18,7 +18,7 @@ class UserCommunityMembership(models.Model):
 class Posts(models.Model):
     objects = None
     template_name = models.CharField(max_length=100)
-    template_dict = models.CharField(max_length=10000)
+    template_dict = models.JSONField()
     #photo = models.ImageField(upload_to='images')
     #location = models.FloatField()
     community_name = models.CharField(max_length=100)

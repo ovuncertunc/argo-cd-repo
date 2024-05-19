@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .search-bar {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .search-bar input[type="text"] {
+            padding: 5px;
+            width: 60%;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        .search-bar button {
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .post {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 96%;
+            cursor: pointer;
+        }
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .profile-picture {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        .author-details {
+            font-size: 14px;
+            color: #333;
+        }
+        .post-content {
+            color: #333;
+            font-weight: bold;
+        }
+        .created-at {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Search Results</h2>
+    <div class="container">
+        <div class="search-bar">
+            <form method="get" action="/search_posts">
+                <input type="text" name="query" placeholder="Search posts..." value="{{ query }}">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <h3>Results for "{{ query }}"</h3>
+        <hr>
+        <ul>
+            {% if search_results %}
+                {% for post in search_results %}
+                    <li class="post" onclick="window.location.href='/display_post?post_id={{ post.id }}'">
+                        <div class="author-info">
+                            {% if post.author_profile_picture %}
+                                <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                            {% endif %}
+
+                            <div class="author-details">
+                                {% if post.title %}
+                                    <h3>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h3>
+                                {% else %}
+                                    <h3>{{ post.author_username }}: &quot;<i>{{ post.template_name }}</i>&quot;</h3>
+                                {% endif %}
+                                <div class="created-at">
+                                    <p>Created at: {{ post.created_at }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/community_home?community_name={{ post.community_name }}">{{ post.community_name }}</a>
+                    </li>
+                    <hr>
+                {% endfor %}
+            {% else %}
+                <p>No posts found for "{{ query }}".</p>
+            {% endif %}
+        </ul>
+    </div>
+</body>
+</html>

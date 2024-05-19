@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Edit Profile</title>
+<title>Edit Community</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -36,6 +36,18 @@
         margin-top: 6px;
         margin-bottom: 16px;
     }
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
     .required-label::before {
         content: "*";
         color: red;
@@ -46,48 +58,39 @@
     label {
         vertical-align: middle; /* Align the labels vertically with the input fields */
     }
-    .profile-picture {
-        display: block;
-        margin-top: 10px;
-        width: 300px;
-        height: auto;
-    }
 </style>
 </head>
 <body>
-<form method="post" enctype="multipart/form-data" action="edit_profile">
+<form method="post" enctype="multipart/form-data" action="edit_community">
     {% csrf_token %}
     <div>
-        <label class="required-label" for="first_name">First Name:</label>
+        <label class="required-label" for="name">Community Name:</label>
         <br>
-        {{ form.first_name }}
+        {{ form.name }}
     </div>
     <div>
-        <label class="required-label" for="last_name">Last Name:</label>
+        <label class="required-label" for="description">Description:</label>
         <br>
-        {{ form.last_name }}
+        {{ form.description }}
     </div>
     <div>
-        <label for="birthdate">Birth Date:</label>
+        <label class="required-label" for="privacy">Privacy:</label>
         <br>
-        {{ form.birthdate }}
+        <ul>
+        {{ form.privacy }}
+        </ul>
     </div>
     <div>
-        <label for="about_me">About me:</label>
+        <label for="community_photo">Community Picture:</label>
         <br>
-        {{ form.about_me }}
-    </div>
-    <div>
-        <label for="profile_picture">Profile Picture:</label>
+        {{ form.community_photo }}
         <br>
-        {{ form.profile_picture }}
-        <br>
-        {% if profile_picture %}
-        <img src="{{ profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+        {% if community_photo %}
+            <img src="{{ community_photo.url }}" alt="Community Photo" class="profile-picture">
         {% endif %}
     </div>
     <br>
-    <button type="submit">Submit</button>
+    <button type="submit">Edit Community</button>
     <button type="button" onclick="window.location.href='/home'" style="margin-left: 10px;">Cancel</button>
 </form>
 </body>

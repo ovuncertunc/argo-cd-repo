@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect
@@ -7,7 +7,9 @@ from .models import Community, Posts, UserProfile, UserCommunityMembership, Comm
 from .forms import CommunityCreationForm, PostForm, UserProfileForm, CommunitySpecificTemplateForm
 from datetime import datetime
 from django.conf import settings
-import json, ast
+import json
+from django.db.models import Q
+from django.http import HttpResponse
 
 def login_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -63,19 +65,32 @@ def home(request=None):
 
         post.title = None
         if post.template_name == "Default Template":
-            template_dict = ast.literal_eval(post.template_dict)
-            post.title = template_dict["Title"]
+            post.title = post.template_dict["Title"]
 
     all_communities = Community.objects.exclude(name__in=joined_communities)
 
     return render(request, 'home.html',  {'communities': all_communities, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
 
 def search_communities(request):
-    query = request.GET.get('query', '')
+    query = request.GET.get('query', '*')
     communities = Community.objects.filter(name__icontains=query)
 
     return render(request, 'search_community.html', {'communities': communities, 'query': query, "MEDIA_URL": settings.MEDIA_URL})
 
+def search_posts(request):
+    query = request.GET.get('query', '')
+    search_results = []
+
+    if query:
+        search_results = Posts.objects.filter(
+            Q(template_dict__icontains=query) | Q(template_name__icontains=query)
+        )
+
+    context = {
+        'query': query,
+        'search_results': search_results
+    }
+    return render(request, 'search_posts.html', context)
 
 def my_communities(request):
     username = request.user.username
@@ -102,7 +117,7 @@ def create_community(request):
             new_community_membership = UserCommunityMembership(username=request.user.username, community=community_name)
             new_community_membership.save()
 
-            return render(request, 'community_home.html', {'community_name': community_name, "community_photo": new_community.community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True})
+            return render(request, 'community_home.html', {'community': new_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": [owner.username]})
     else:
         form = CommunityCreationForm()
 
@@ -117,10 +132,10 @@ def community_home(request):
 
     is_joined = len(community_membership) == 1
     community = Community.objects.get(name=community_name)
-    description = community.description
+
     is_public = community.privacy == "public"
     is_owner = community.owner == request.user.username
-    community_photo = community.community_photo
+
     if is_joined or is_public:
         posts = Posts.objects.filter(community_name=community_name)
 
@@ -131,13 +146,12 @@ def community_home(request):
 
             post.title = None
             if post.template_name == "Default Template":
-                template_dict = ast.literal_eval(post.template_dict)
-                post.title = template_dict["Title"]
+                post.title = post.template_dict["Title"]
 
     else:
         posts = []
 
-    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": is_joined, "joined_user_list": joined_user_list})
+    return render(request, 'community_home.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "posts": posts, "is_joined": is_joined, "joined_user_list": joined_user_list})
 
 
 def join_community(request):
@@ -202,13 +216,12 @@ def display_post(request):
     user_profile = UserProfile.objects.get(username=post_author)
     post.author_profile_picture = user_profile.profile_picture
 
-    template_dict_json = ast.literal_eval(post.template_dict)
-    post.template_dict = template_dict_json
-
     post.title = None
     if post.template_name == "Default Template":
-        post.title = template_dict_json["Title"]
-
+        post.title = post.template_dict["Title"]
+    else:
+        temp = post.template_dict.replace("'", "\"")
+        post.template_dict = json.loads(temp)
 
     return render(request, 'display_post.html', {"post": post})
 
@@ -220,11 +233,32 @@ def display_community_specific_template_post(request):
     if template_name == "Default Template":
         template_dict = {"Title": "text", "Content": "text", "Event Date": "date"}
     else:
-        template_dict_str = CommunitySpecificTemplate.objects.get(template_name=template_name).template_dict
-        template_dict = ast.literal_eval(template_dict_str)
+        template = CommunitySpecificTemplate.objects.get(template_name=template_name)
+        template_dict = json.loads(template.template_dict.replace("'", "\""))
 
     return render(request, "create_post.html", {'community_name': community_name, "template_name": template_name, "template_dict": template_dict, "select_dropdown_list": False})
 
+def edit_community(request):
+    community_name = request.GET["community_name"]
+    community = get_object_or_404(Community, name=community_name)
+
+    if request.method == "POST":
+        form = CommunityCreationForm(request.POST, request.FILES, instance=community)
+
+        existing_community = Community.objects.filter(name=community_name)
+
+        if form.is_valid():
+            form.save()
+
+        joined_user_list = UserCommunityMembership.objects.filter(community=community).values_list('username', flat=True)
+
+        return render(request, 'community_home.html', {'community': existing_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": joined_user_list})
+
+    else:
+        form = CommunityCreationForm(instance=community)
+        community_photo = form.initial["community_photo"]
+
+    return render(request, "edit_profile.html", {"form": form, "community_photo": community_photo})
 
 def edit_profile(request):
     url = None
@@ -269,18 +303,22 @@ def edit_profile(request):
     return render(request, "edit_profile.html", {"form": form, "profile_picture": profile_picture})
 
 def display_user_profile(request):
-    my_profile = bool(request.GET["my_profile"])
+    username = request.GET["username"]
 
-    if my_profile:
-        username = request.user.username
+    if username == request.user.username:
+        my_profile = True
     else:
-        username = request.GET["username"]
+        my_profile = False
 
-    if UserProfile.objects.filter(username=username).exists():
+    if not UserProfile.objects.filter(username=username).exists():
+        if my_profile:
+            return edit_profile(request)
+        else:
+            return HttpResponse("!ERRORR")
+    else:
         user_profile = UserProfile.objects.get(username=username)
-        return render(request, "user_profile.html", {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL, "my_profile": my_profile})
-    else:
-        return edit_profile(request)
+        return render(request, "user_profile.html",
+                      {"user_profile": user_profile, "MEDIA_URL": settings.MEDIA_URL, "my_profile": my_profile})
 
 
 def create_template(request):
