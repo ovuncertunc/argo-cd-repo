@@ -1,0 +1,30 @@
+<!-- invitations.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invitations</title>
+</head>
+<body>
+    <h1>Invitations</h1>
+    {% for invitation in invitations %}
+    <div id="invitation-{{ invitation.id }}" style="margin-bottom: 10px;">
+        <span>{{ invitation.username }}</span>
+        <form method="post" action="/display_join_invitations" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="requested_username" value="{{ invitation.username }}">
+            <input type="hidden" name="community_name" value="{{ invitation.community_name }}">
+            <input type="hidden" name="response" value="approve">
+            <button type="submit">Approve</button>
+        </form>
+        <form method="post" action="/display_join_invitations" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="requested_username" value="{{ invitation.username }}">
+            <input type="hidden" name="community_name" value="{{ invitation.community_name }}">
+            <input type="hidden" name="response" value="reject">
+            <button type="submit">Reject</button>
+        </form>
+    </div>
+    {% endfor %}
+    <button type="button" onclick="window.location.href='/home'" style="margin-left: 10px;">Home</button>
+</body>
+</html>
