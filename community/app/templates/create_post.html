@@ -35,37 +35,28 @@
         }
 
         function postSubmitForm() {
-            // Create an empty dictionary to store field names and values
-            var formData = {};
-
-            // Iterate over input fields and collect their values
-            var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="date"]');
-            inputs.forEach(function(input) {
-                formData[input.name] = input.value;
-            });
+            var form = document.getElementById('post_form');
+            var formData = new FormData(form);
 
             // Explicitly add geolocation value
-            var geolocation = document.getElementById('geolocation')
+            var geolocation = document.getElementById('geolocation');
             if (geolocation.value) {
-                console.log(geolocation.name)
-                console.log(geolocation.value)
-                formData[geolocation.name] = geolocation.value;
+                formData.append(geolocation.name, geolocation.value);
             }
 
-            // Convert the dictionary to a JSON string
-            var formDataJSON = JSON.stringify(formData);
-
-            // Create a hidden input field to hold the JSON data
-            var dataField = document.createElement('input');
-            dataField.setAttribute('type', 'hidden');
-            dataField.setAttribute('name', 'form_data');
-            dataField.setAttribute('value', formDataJSON);
-
-            // Append the hidden input field to the form
-            document.getElementById('post_form').appendChild(dataField);
-
-            // Submit the form
-            document.getElementById('post_form').submit();
+            // Submit the form using Fetch API
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/community_home?community_name={{ community_name }}';
+                } else {
+                    alert('Error creating post.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -114,24 +105,38 @@
 
     {% else %}
     <div class="container">
-        <form id="post_form" method="post" action="/create_post?community_name={{ community_name }}&template_name={{ template_name }}">
+        <form id="post_form" method="post" action="/create_post?community_name={{ community_name }}&template_name={{ template_name }}" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="template_name" value="{{ template_name }}">
             {% for field_name, field_type in template_dict.items %}
                 <div class="text-box-pair">
-
                     {% if field_type == "text" %}
                         <div>
                             <label>{{ field_name }}:</label>
-                            <input type="{{ field_type }}" name="{{ field_name }}" class="form-control">
+                            <input type="text" name="{{ field_name }}" class="form-control">
                         </div>
 
-                    {% elif field_type == "audio/mpeg" or field_type == "audio/ogg" or field_type == "video/mp4" or field_type == "video/ogg" or field_type == "photo" %}
-                        --- upload screen ---
+                    {% elif field_type == "audio/mpeg" or field_type == "audio/ogg" or field_type == "audio/mp4"%}
+                        <div>
+                            <label>{{ field_name }}:</label>
+                            <input type="file" name="{{ field_name }}" accept="audio/mpeg, audio/ogg, audio/mp4">
+                        </div>
+
+                    {% elif field_type == "video/mpeg" or field_type == "video/ogg" or field_type == "video/mp4"%}
+                        <div>
+                            <label>{{ field_name }}:</label>
+                            <input type="file" name="{{ field_name }}" accept="video/mp4, video/ogg, video/mpeg ">
+                        </div>
+
+                    {% elif field_type == "photo" %}
+                        <div>
+                            <label>{{ field_name }}:</label>
+                            <input type="file" name="{{ field_name }}" accept="image/*">
+                        </div>
 
                     {% elif field_type == "date" %}
                         <label>{{ field_name }}:</label>
-                        <input type="{{ field_type }}" name="{{ field_name }}" value="2024-01-01" />
+                        <input type="date" name="{{ field_name }}" value="2024-01-01">
 
                     {% elif field_type == "geolocation" %}
                         <h3>{{ field_name }}</h3>
@@ -142,12 +147,12 @@
                         <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
                     {% else %}
-                        <p> Do nothing</p>
+                        <p>Do nothing</p>
                     {% endif %}
                 </div>
             {% endfor %}
             <br><br>
-            <button type="submit" id="submit_button" onclick="postSubmitForm()">Create Post</button>
+            <button type="button" id="submit_button" onclick="postSubmitForm()">Create Post</button>
             <button type="button" id="cancel_button" onclick="window.location.href='/community_home?community_name={{ community_name }}'" style="margin-left: 10px;">Cancel</button>
         </form>
     </div>

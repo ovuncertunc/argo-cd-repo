@@ -13,6 +13,7 @@ from functools import reduce
 import operator
 from django.http import HttpResponse
 from django.contrib import messages
+from django.core.files.storage import FileSystemStorage
 
 
 def login_required(view_func):
@@ -108,9 +109,10 @@ def advanced_search_post(request):
 
         to_be_searched = {}
         for key, value in template_dict.items():
-            value = request.POST[key]
-            if value != "":
-                to_be_searched[key] = value
+            if value in ["text", "date"]:
+                value = request.POST[key]
+                if value != "":
+                    to_be_searched[key] = value
 
         display_fields = list(to_be_searched.keys())
 
@@ -156,25 +158,6 @@ def get_template_dict(request):
     else:
         return HttpResponse("There is something wrong!")
 
-def display_advanced_search_post(request):
-
-    community_name = request.GET["community_name"]
-
-    community = Community.objects.get(name=community_name)
-
-    posts = Posts.objects.filter(community_name=community_name)
-
-    for post in posts:
-        post_author = post.author_username
-        user_profile = UserProfile.objects.get(username=post_author)
-        post.author_profile_picture = user_profile.profile_picture
-
-        post.title = None
-        if post.template_name == "Default Template":
-            post.title = post.template_dict["Title"]
-
-
-    return render(request, 'display_advanced_search_post.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "posts": posts})
 def my_communities(request):
     username = request.user.username
     joined_communities = UserCommunityMembership.objects.filter(username=username).values_list('community', flat=True)
@@ -255,10 +238,8 @@ def join_community(request):
     posts = Posts.objects.filter(community_name=community_name)
 
     community = Community.objects.get(name=community_name)
-    community_photo = community.community_photo
-    description = community.description
     is_owner = community.owner == request.user.username
-    return render(request, 'community_home.html', {'community_name': community_name, "community_photo": community_photo, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "description": description, "posts": posts, "is_joined": True, "joined_user_list": joined_user_list, "template_list": template_list})
+    return render(request, 'community_home.html', {'community': community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": is_owner, "posts": posts, "is_joined": True, "joined_user_list": joined_user_list, "template_list": template_list})
 
 
 def create_post(request):
@@ -282,18 +263,30 @@ def create_post(request):
             new_post = Posts(template_name=template_name, template_dict=template_dict, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
 
-            return community_home(request)
         else:
+            post_template = request.POST["template_name"]
+            template_dict_field_types_str = CommunitySpecificTemplate.objects.get(community_name=community_name, template_name=post_template).template_dict
+            template_dict_field_types = json.loads(template_dict_field_types_str.replace("'", "\""))
 
-            post_content_str = request.POST["form_data"]
-            post_content_json = json.loads(post_content_str.replace("'", "\""))
+            template_dict_values = {}
+            for key, value in template_dict_field_types.items():
+                if value in ["text", "geolocation", "date"]:
+                    template_dict_values[key] = str(request.POST[key])
+                elif value in ["photo", "audio/mpeg", "audio/ogg", "video/mpeg", "video/ogg"]:
+                    fs = FileSystemStorage()
+                    file = request.FILES[key]
+                    filename = fs.save(file.name, file)
+                    template_dict_values[key] = fs.url(filename)
 
-            new_post = Posts(template_name=template_name, template_dict=post_content_json, community_name=community_name, author_username=author_username, created_at=created_at)
+
+            new_post = Posts(template_name=template_name, template_dict=template_dict_values, community_name=community_name, author_username=author_username, created_at=created_at)
             new_post.save()
 
-            return community_home(request)
+        return redirect(reverse("community_home") + f"?community_name={community_name}")
 
-    return render(request, 'create_post.html', {'community_name': community_name, "templates": templates, "select_dropdown_list": True})
+
+    else:
+        return render(request, 'create_post.html', {'community_name': community_name, "templates": templates, "select_dropdown_list": True})
 
 
 def display_post(request):

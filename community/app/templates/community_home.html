@@ -34,27 +34,26 @@
             border-radius: 10%;
             object-fit: cover;
             margin: 20px 0;
-            align: left
         }
         p {
             color: #666;
         }
-        button {
+        button, .join-button {
             background-color: #007bff;
             color: #fff;
             border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            margin-right: 10px;
+            margin: 5px;
         }
-        button:hover {
+        button:hover, .join-button:hover {
             background-color: #0056b3;
         }
         h3 {
             color: #333;
-            display: flex;
-            align-items: flex-start;
+            text-align: left;
+            margin-top: 20px;
         }
         hr {
             border: none;
@@ -65,6 +64,7 @@
         ul {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
         .post {
             display: flex;
@@ -75,16 +75,6 @@
             border-radius: 5px;
             margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 96%;
-            cursor: pointer;
-        }
-        .description {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 15px;
-            border-radius: 5px;
-            width: 96%;
             cursor: pointer;
         }
         .author-info {
@@ -131,7 +121,6 @@
             color: #007bff;
             text-decoration: underline;
         }
-        /* Styles for the user list popup */
         #userListPopup {
             display: none;
             position: fixed;
@@ -163,18 +152,25 @@
             margin-bottom: 10px;
         }
         .search-bar {
-            margin: 0;
+            margin: 20px 0;
             text-align: left;
         }
         .search-bar input[type="text"] {
-            padding: 5px;
+            padding: 10px;
             width: 60%;
             border-radius: 3px;
             border: 1px solid #ccc;
+            margin-right: 10px;
         }
-        .search-bar button {
-            padding: 5px 10px;
-            border-radius: 3px;
+        .advanced-search-bar button {
+            margin: 0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: #fff;
+            background-color: #007bff;
+        }
+        .advanced-search-bar button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -185,19 +181,19 @@
             <button onclick="location.href='/my_communities'">My Communities</button>
             <button onclick="location.href='/user_profile?username={{user.username}}'">My Profile</button>
             {% if is_owner %}
-                <form method="get" action="/create_template">
+                <form method="get" action="/create_template" style="display: inline;">
                     {% csrf_token %}
                     <input type="hidden" name="community_name" value="{{ community.name }}">
                     <button type="submit">Create Template</button>
                 </form>
-                <form method="get" action="/edit_community">
+                <form method="get" action="/edit_community" style="display: inline;">
                     {% csrf_token %}
                     <input type="hidden" name="community_name" value="{{ community.name }}">
                     <button type="submit">Edit Community</button>
                 </form>
             {% endif %}
             {% if is_joined %}
-                <form method="get" action="/create_post">
+                <form method="get" action="/create_post" style="display: inline;">
                     {% csrf_token %}
                     <input type="hidden" name="community_name" value="{{ community.name }}">
                     <button type="submit">Create Post</button>
@@ -206,7 +202,6 @@
                 <a href="/join_community?community_name={{ community.name }}" class="join-button">Join</a>
             {% endif %}
             <button onclick="location.href='/logout_user'">Logout</button>
-
         </div>
         <div class="description">
             <h2>Welcome to {{ community.name }}</h2>
@@ -218,14 +213,18 @@
             <p>Description: {{ community.description }}</p>
             <p>Users: <span id="userCount" class="clickable">{{ joined_user_list|length }}</span></p>
         </div>
-
-        <div class="button-group">
-            {% if not is_joined %}
-                <a href="/join_community?community_name={{ community.name }}" class="join-button">Join</a>
-            {% endif %}
-        </div>
         <hr>
-        <h3> Posts</h3>
+        {% if is_joined %}
+        <div class="advanced-search-bar">
+            <form method="get" action="/advanced_search_post">
+                <input type="hidden" name="community_name" value="{{ community.name }}">
+                <button type="submit">Advanced Search Posts</button>
+            </form>
+        </div>
+        {% endif %}
+        <hr>
+        <h3>Posts</h3>
+        {% if is_joined %}
         <div class="search-bar">
             <form method="get" action="/search_posts">
                 <input type="hidden" name="community_name" value="{{ community.name }}">
@@ -233,23 +232,14 @@
                 <button type="submit">Basic Search</button>
             </form>
         </div>
-
-        <div class="advanced-search-bar">
-            <form method="get" action="/advanced_search_post">
-                <input type="hidden" name="community_name" value="{{ community.name }}">
-                <button type="submit">Advanced Search</button>
-            </form>
-        </div>
-
+        {% endif %}
         <ul>
             {% for post in posts %}
                 <li class="post" onclick="window.location.href='/display_post?post_id={{ post.id }}'">
-
                     <div class="author-info">
                         {% if post.author_profile_picture %}
                             <img src="{{ post.author_profile_picture.url }}" alt="Profile Picture" class="profile-picture">
                         {% endif %}
-
                         <div class="author-details">
                             {% if post.title %}
                                 <h3>{{ post.author_username }}: &quot;<i>{{ post.title }}</i>&quot;</h3>
@@ -262,7 +252,7 @@
                         <p>Created at: {{ post.created_at }}</p>
                     </div>
                 </li>
-            <hr>
+                <hr>
             {% endfor %}
         </ul>
     </div>
@@ -273,7 +263,7 @@
         <h3>Joined Users</h3>
         <ul>
             {% for user in joined_user_list %}
-                <a href="/user_profile?username={{ user }}">{{ user }}</a>
+                <li><a href="/user_profile?username={{ user }}">{{ user }}</a></li>
             {% endfor %}
         </ul>
     </div>

@@ -32,7 +32,7 @@
         var formData = {};
 
         // Iterate over input fields and collect their values
-        var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="geolocation"], .text-box-pair input[type="date"]');
+        var inputs = document.querySelectorAll('.text-box-pair input[type="text"], .text-box-pair input[type="date"]');
         inputs.forEach(function(input) {
             formData[input.name] = input.value;
         });
@@ -81,7 +81,7 @@
             <input type="hidden" name="template_name" value="{{ template_name }}">
             {% for field_name, field_type in template_dict.items %}
                 <div class="text-box-pair">
-                    {% if field_type == "text" or field_type == "geolocation" %}
+                    {% if field_type == "text" %}
                         <div>
                             <label>{{ field_name }}:</label>
                             <input type="{{ field_type }}" name="{{ field_name }}" class="form-control">
@@ -89,8 +89,6 @@
                     {% elif field_type == "date" %}
                     <label>{{ field_name }}:</label>
                     <input type="{{ field_type }}" name="{{ field_name }}" />
-                    {% else %}
-                    <p> Do nothing</p>
                     {% endif %}
                 </div>
             {% endfor %}

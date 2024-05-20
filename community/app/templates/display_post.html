@@ -132,8 +132,23 @@
                 {% if template_field_value_dict|get_item:key == "geolocation" %}
                     <p>{{ key }}: <i> Look at the blue pin on the map! </i></p>
                     <div id="map" data-lat-lng="{{ value }}"></div>
-                {% else %}
+                {% elif template_field_value_dict|get_item:key == "text" or template_field_value_dict|get_item:key == "date" %}
                     <p>{{ key }}: {{ value }}</p>
+                {% elif template_field_value_dict|get_item:key == "audio/mpeg" or template_field_value_dict|get_item:key == "audio/ogg" %}
+                    <p>{{ key }}:</p>
+                    <audio controls>
+                        <source src="{{ value }}" type="{{ template_field_value_dict|get_item:key }}">
+                        Your browser does not support the audio element.
+                    </audio>
+                {% elif template_field_value_dict|get_item:key == "video/mp4" or template_field_value_dict|get_item:key == "video/ogg" %}
+                    <p>{{ key }}:</p>
+                    <video controls>
+                        <source src="{{ value }}" type="{{ template_field_value_dict|get_item:key }}">
+                        Your browser does not support the video element.
+                    </video>
+                {% elif template_field_value_dict|get_item:key == "photo" %}
+                    <p>{{ key }}:</p>
+                    <img src="{{ value }}" alt="{{ key }}" style="max-width: 50%; height: auto;">
                 {% endif %}
             {% endfor %}
         </div>
