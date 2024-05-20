@@ -58,6 +58,12 @@
     label {
         vertical-align: middle; /* Align the labels vertically with the input fields */
     }
+    .community_photo {
+        display: block;
+        margin-top: 10px;
+        width: 300px;
+        height: auto;
+    }
 </style>
 </head>
 <body>
@@ -81,7 +87,7 @@
         </ul>
     </div>
     <div>
-        <label for="community_photo">Community Picture:</label>
+        <label class="community_photo" for="community_photo">Community Picture:</label>
         <br>
         {{ form.community_photo }}
         <br>

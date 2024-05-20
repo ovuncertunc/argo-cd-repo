@@ -58,15 +58,19 @@
     label {
         vertical-align: middle; /* Align the labels vertically with the input fields */
     }
+    .community_photo {
+        display: block;
+        margin-top: 10px;
+        width: 400px;
+        height: auto;
+    }
 </style>
 </head>
 <body>
-<form method="post" enctype="multipart/form-data" action="edit_community">
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div>
-        <label class="required-label" for="name">Community Name:</label>
-        <br>
-        {{ form.name }}
+        Community Name: {{ form.name }}
     </div>
     <div>
         <label class="required-label" for="description">Description:</label>
@@ -76,9 +80,7 @@
     <div>
         <label class="required-label" for="privacy">Privacy:</label>
         <br>
-        <ul>
         {{ form.privacy }}
-        </ul>
     </div>
     <div>
         <label for="community_photo">Community Picture:</label>
@@ -86,7 +88,7 @@
         {{ form.community_photo }}
         <br>
         {% if community_photo %}
-            <img src="{{ community_photo.url }}" alt="Community Photo" class="profile-picture">
+            <img src="{{ community_photo.url }}" alt="Community Photo" class="community_photo">
         {% endif %}
     </div>
     <br>

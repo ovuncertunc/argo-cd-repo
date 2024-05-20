@@ -313,26 +313,27 @@ def display_post(request):
 def edit_community(request):
     community_name = request.GET["community_name"]
     community = get_object_or_404(Community, name=community_name)
+    post_data = request.POST.copy()
+    post_data["name"] = community.name
 
     if request.method == "POST":
-        form = CommunityCreationForm(request.POST, request.FILES, instance=community)
-
-        existing_community = Community.objects.filter(name=community_name)
+        form = CommunityCreationForm(post_data, request.FILES, instance=community)
+        if "privacy" not in form.changed_data:
+            post_data["privacy"] = community.privacy
+        if "description" not in form.changed_data:
+            post_data["description"] = community.description
 
         if form.is_valid():
             form.save()
 
-        joined_user_list = UserCommunityMembership.objects.filter(community=community).values_list('username', flat=True)
-        template_list = CommunitySpecificTemplate.objects.filter(community_name=community_name).values_list(
-            'template_name', flat=True)
-
-        return render(request, 'community_home.html', {'community': existing_community, "MEDIA_URL": settings.MEDIA_URL, "is_owner": True, "is_joined": True, "joined_user_list": joined_user_list, "template_list": template_list})
+        return redirect(reverse("community_home") + f"?community_name={community_name}")
 
     else:
         form = CommunityCreationForm(instance=community)
         community_photo = form.initial["community_photo"]
+        form.fields['name'].disabled = True
 
-    return render(request, "edit_profile.html", {"form": form, "community_photo": community_photo})
+        return render(request, "edit_community.html", {"form": form, "community_photo": community_photo})
 
 def edit_profile(request):
     url = None
