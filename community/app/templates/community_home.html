@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome Page</title>
     <style>
+        .messages .error {
+            color: red;
+            font-weight: bold;
+        }
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f5f5f5;
@@ -46,7 +50,8 @@
             flex-direction: column;
             text-align: left;
             margin-right: 20px;
-            width: 33%;
+            margin-left: 20px;
+            width: 50%;
         }
         .edit-buttons {
             display: flex;
@@ -203,11 +208,9 @@
     <div class="container">
         <div class="top-bar">
             <button onclick="location.href='/home'">Home</button>
-            <button onclick="location.href='/my_communities'">My Communities</button>
+            <button onclick="location.href='/communities?all_or_my=My'">My Communities</button>
+            <button onclick="location.href='/communities?all_or_my=All'">All Communities</button>
             <button onclick="location.href='/user_profile?username={{user.username}}'">My Profile</button>
-            {% if not is_joined %}
-                <a href="/join_community?community_name={{ community.name }}" class="join-button">Join</a>
-            {% endif %}
             <button onclick="location.href='/logout_user'">Logout</button>
         </div>
         <h2>Welcome to {{ community.name }}</h2>
@@ -220,6 +223,7 @@
             <div class="community-details">
                 <p>Description: {{ community.description }}</p>
                 <p>Privacy: {{ community.privacy }}</p>
+                <p>Owner: {{ community.owner }}</p>
                 <p>Users: <span id="userCount" class="clickable">{{ joined_user_list|length }}</span></p>
             </div>
             <div class="edit-buttons">
@@ -234,6 +238,24 @@
                         <input type="hidden" name="community_name" value="{{ community.name }}">
                         <button type="submit">Edit Community</button>
                     </form>
+
+                    <form method="get" action="/display_join_invitations" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="community_name" value="{{ community.name }}">
+                        <button type="submit">Display Join Invitations</button>
+                    </form>
+                {% endif %}
+                {% if not is_joined %}
+                    {% if messages %}
+                      <ul class="messages">
+                        {% for message in messages %}
+                          <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                    <button onclick="location.href='/join_community?community_name={{ community.name }}'">Join</button>
+                {% elif is_joined and not is_owner %}
+                    <button onclick="location.href='/leave_community?community_name={{ community.name }}'">Leave</button>
                 {% endif %}
             </div>
         </div>

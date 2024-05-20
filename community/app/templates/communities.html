@@ -11,7 +11,7 @@
             padding: 0;
             background-color: #f4f4f4;
         }
-        h1 {
+        h2 {
             text-align: center;
         }
         ul {
@@ -55,7 +55,6 @@
             margin-right: 10px;
             color: #007bff;
         }
-
         .community-photo {
             width: 100px;
             height: 100px;
@@ -70,13 +69,13 @@
     </style>
 </head>
 <body>
-    <h1>My Communities</h1>
+    <h2> {{ all_or_my }} Communities</h2>
     <div class="actions">
         <a href="/create_community">Create Community</a>
         <a href="/home" class="home-button">Home</a>
         <a href="/logout_user">Logout</a>
     </div>
-    <ul>
+    <ul id="communityList">
         {% for community in communities %}
         <form method="post" action="/community_home">
             {% csrf_token %}
@@ -94,5 +93,6 @@
         </form>
         {% endfor %}
     </ul>
+
 </body>
 </html>

@@ -134,13 +134,13 @@
                     <div id="map" data-lat-lng="{{ value }}"></div>
                 {% elif template_field_value_dict|get_item:key == "text" or template_field_value_dict|get_item:key == "date" %}
                     <p>{{ key }}: {{ value }}</p>
-                {% elif template_field_value_dict|get_item:key == "audio/mpeg" or template_field_value_dict|get_item:key == "audio/ogg" %}
+                {% elif template_field_value_dict|get_item:key == "audio/mp4" or template_field_value_dict|get_item:key == "audio/mpeg" or template_field_value_dict|get_item:key == "audio/ogg" %}
                     <p>{{ key }}:</p>
                     <audio controls>
                         <source src="{{ value }}" type="{{ template_field_value_dict|get_item:key }}">
                         Your browser does not support the audio element.
                     </audio>
-                {% elif template_field_value_dict|get_item:key == "video/mp4" or template_field_value_dict|get_item:key == "video/ogg" %}
+                {% elif template_field_value_dict|get_item:key == "video/mp4" or template_field_value_dict|get_item:key == "video/ogg" or template_field_value_dict|get_item:key == "video/mpeg"%}
                     <p>{{ key }}:</p>
                     <video controls>
                         <source src="{{ value }}" type="{{ template_field_value_dict|get_item:key }}">

@@ -38,11 +38,17 @@
             var form = document.getElementById('post_form');
             var formData = new FormData(form);
 
-            // Explicitly add geolocation value
+            // Explicitly add geolocation value if it exists
             var geolocation = document.getElementById('geolocation');
-            if (geolocation.value) {
-                formData.append(geolocation.name, geolocation.value);
+            if (geolocation) {
+                if (geolocation.value) {
+                    formData.append(geolocation.name, geolocation.value);
+                }
+            } else {
+                console.warn('Geolocation element not found'); // Debugging statement
             }
+
+            console.log('Form Data:', formData); // Debugging statement
 
             // Submit the form using Fetch API
             fetch(form.action, {
@@ -50,12 +56,14 @@
                 body: formData
             }).then(response => {
                 if (response.ok) {
+                    console.log('Post created successfully'); // Debugging statement
                     window.location.href = '/community_home?community_name={{ community_name }}';
                 } else {
+                    console.error('Error creating post:', response.statusText); // Debugging statement
                     alert('Error creating post.');
                 }
             }).catch(error => {
-                console.error('Error:', error);
+                console.error('Error:', error); // Debugging statement
             });
         }
 
@@ -89,7 +97,6 @@
     <label for="template_selector">Select Template:</label>
     <select id="template_selector" onchange="submitForm()">
         <option value="empty">-Please Select Template-</option>
-        <option value="Default Template">Default Template</option>
         {% for template in templates %}
             <option value="{{template}}">{{template}}</option>
         {% endfor %}

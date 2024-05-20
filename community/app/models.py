@@ -15,6 +15,12 @@ class UserCommunityMembership(models.Model):
     community = models.CharField(max_length=100)
     joined_date = models.DateTimeField(default=timezone.now, editable=False)
 
+class UserJoinInvitations(models.Model):
+    objects = None
+    username = models.CharField(max_length=30)
+    community_name = models.CharField(max_length=100)
+    is_suspended = models.BooleanField(default=False)
+
 class Posts(models.Model):
     objects = None
     template_name = models.CharField(max_length=100)
